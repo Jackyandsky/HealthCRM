@@ -1,0 +1,415 @@
+1.本项目旨在帮助用户管理自己的客户，客户信息管理，客户购买记录管理，商品管理（保健品 品牌：usana），服药plan管理，定期对客户反馈记录，timeline（购买记录，保健品使用反馈记录）查看。完成以上功能目的是为掌握用户的健康状况以及消费潜力评估，比如可以设定药丸数低于10%提示，或者客户每月回访的提示.
+2.仪表盘，可以查看销售记录，客户数，新增客户数，药丸剩余预警客户列表，比如低于20%的前5个用户，按百分比小到大排序。距离上次回访记录到目前未回访的用户列表，时间跨度大到小排序.以及跟营销相关的数据曲线或者指标.
+3.客户信息管理页面，旨在用户可以对自己的客户进行crud操纵，可以动态增加分类和tags，便于查找，支持filter和各种必要排序，比如仪表盘的几项重要指标.
+4.商品管理，维护商品的基本信息，图片可以引用url。
+5.plan管理，因为提供的产品为健康管理plan，也可以看作是package，制定一个plan，有针对用户的症状，比如贫血，比如关节痛类似的，然后包含哪些产品，以及每种保健品的服药频次定义。这是用户定义的真正的销售组合，套餐，并非是直接的商品，而是被策划过的根据用户特征而定义的plan。plan可以分享跟客户，客户可以看到自己购买的plan，并由根据时间推测的usage统计信息.
+6.回访记录管理，这里对记录了对客户进行的回访文本记录，了解客户的使用情况，并做文本记录. 此页面应该有用户列表，可以看到记录的列表，并维护.
+7.有产品的展示页面，可以进行分类搜索，公开访问。
+8.用户管理表可以跟客户表使用一个表，角色分为系统管理员，管理员（用户），客户，系统管理员可以创建所有角色，系统管理员也兼容管理员角色，客户归属管理员or系统管理员.
+======
+项目：客户健康与消费管理系统 (USANA 产品)
+
+一、核心模块
+    1. 仪表盘 (Dashboard)
+        - 关键指标汇总 (销售额、客户总数、新增客户数)
+        - 预警中心
+            - 产品余量预警 (如：余量 < 20% 的前5名客户)
+            - 定期回访预警 (如：超过X天未回访客户列表)
+        - 营销数据洞察 (如图表、趋势线)
+        - 待办事项提醒 (如：今日需回访客户)
+
+    2. 客户信息管理 (CRM)
+        - 客户档案 (基本信息、健康状况、联系方式)
+            - CRUD (创建、读取、更新、删除)
+            - 动态分类与标签管理 (便于筛选与分组)
+        - 客户筛选与排序 (支持多维度，如按预警指标、购买力、活跃度)
+        - 客户 Timeline 视图
+            - 购买记录时间轴
+            - 服用计划与调整历史
+            - 健康反馈与回访记录时间轴
+
+    3. 商品管理 (USANA 保健品)
+        - 商品基础信息 (名称、品牌、规格、单价、功效简述)
+        - 商品图片 (支持 URL 引用)
+        - 商品分类管理
+
+    4. 服用计划 (Plan) 管理
+        - 计划模板创建与管理
+            - 针对特定健康目标/症状 (如：贫血改善计划、关节维护计划)
+            - 包含产品组合 (USANA 产品)
+            - 定义各种产品服用频次、剂量、周期
+        - 客户个性化计划定制与指派
+            - 基于客户健康状况和需求调整模板
+        - 计划分享与查阅
+            - 管理员分享计划给客户
+            - 客户查看自己的计划详情及预期服用进度
+
+    5. 购买记录管理
+        - 记录客户购买的商品/计划
+        - 关联客户、商品/计划、订单时间、金额
+        - 支持按时间、客户、产品等多维度查询
+
+    6. 回访记录管理
+        - 记录与客户的沟通详情 (文本记录)
+        - 追踪客户产品使用反馈、健康改善情况
+        - 关联客户与回访时间
+        - 支持查看客户历史回访列表
+
+    7. 公开产品展示页
+        - USANA 产品列表展示 (对公网用户可见)
+        - 产品分类浏览
+        - 产品搜索功能
+        - (可选) 产品详情页，引导潜在客户联系管理员
+
+    8. 用户与权限管理
+        - 角色定义：
+            - 系统管理员 (Super Admin): 最高权限，管理所有数据和用户，可创建其他角色。
+            - 管理员 (Admin/User): 负责管理名下客户，查看销售数据，制定计划等。
+            - 客户 (Client): 查看个人信息、购买记录、服用计划、反馈。
+        - 用户信息管理 (统一用户表，通过角色区分)
+        - 权限细分与控制 (确保数据隔离与安全)
+9.集成开发环境 (IDE): VSCode
+强大的代码编辑器，拥有丰富的插件生态，为 JavaScript、React、Node.js 等提供优秀支持。
+核心框架: Next.js
+基于 React 的生产级框架，内置支持前端路由、后端 API 路由 (Node.js 环境)、服务端渲染 (SSR)、静态站点生成 (SSG)、图片优化等功能。它能简化全栈应用的开发与部署。
+UI 组件与样式: shadcn/ui (构建于 Tailwind CSS 和 Radix UI 之上)
+提供一组设计精美、高度可定制、注重可访问性的 UI 组件。通过直接将组件代码引入项目并使用 Tailwind CSS 进行样式化，可以快速构建现代化且响应式的用户界面。
+数据库: MongoDB Atlas
+云端托管的 NoSQL 文档数据库服务。其灵活的模式和可扩展性非常适合您项目的需求，并提供可靠的数据存储。免费套餐足以支持项目初期。
+后端逻辑: Next.js API Routes
+利用 Next.js 的内置功能，在与前端相同的项目中使用 Node.js 环境创建和管理后端 API 接口，简化开发流程和部署。
+
+
+// MongoDB Atlas Schemas (Optimized)
+// This file contains schema definitions for various collections.
+// Remember to create the specified indexes in MongoDB Atlas for optimal query performance.
+
+// --------------------------------------------------------------------------
+// 1. `users` Collection Schema
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "name": "String", // User's full name, consider indexing if frequently searched
+  "email": "String", // User's email address (store as lowercase for consistency)
+  // Indexes: { "email": 1 (unique: true) }
+  "phone": "String", // User's phone number (optional)
+  // Indexes: { "phone": 1 (unique: true, sparse: true) } (if used for login/unique ID)
+  "password_hash": "String", // Hashed password for security
+  "role": "String", // User's role in the system
+  // Enum: ["system_admin", "admin", "customer"]
+  // Indexes: { "role": 1 }
+  "managing_admin_id": "ObjectId()", // Reference to another user document (their managing admin)
+  // Ref: "users" (where role is 'admin' or 'system_admin')
+  // Indexes: { "managing_admin_id": 1, "sparse": true } (sparse if not all users have it)
+  "tags": ["ObjectId()"], // Array of references to the 'tags' collection
+  // Ref: "tags" (where type is 'user')
+  "is_active": "Boolean", // Whether the user account is active or deactivated
+  // Default: true
+  // Indexes: { "is_active": 1 }
+  "last_login_at": "ISODate()", // Timestamp of the last login (optional)
+  "avatar_url": "String", // URL to the user's profile picture (optional)
+  "address": { // Embedded document for address details (optional)
+    "street": "String",
+    "city": "String",
+    "state_province": "String",
+    "postal_code": "String",
+    "country": "String"
+  },
+  "preferences": { // Embedded document for user-specific preferences (optional)
+    "communication_prefs": {
+      "email_notifications": "Boolean", // Default: true
+      "sms_notifications": "Boolean"   // Default: false
+    },
+    "language": "String" // Default: "en" or "zh"
+  },
+  "other_info": "Object", // Flexible field for any other miscellaneous information
+  "created_at": "ISODate()", // Timestamp of document creation (auto-set)
+  "updated_at": "ISODate()"  // Timestamp of last document update (auto-set)
+}
+*/
+
+// --------------------------------------------------------------------------
+// 2. `tags` Collection Schema
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "name": "String", // Name of the tag (e.g., "High Value", "Follow-up Needed")
+  "type": "String", // Type of entity this tag applies to
+  // Enum: ["user", "product", "plan_template", "follow_up", "general"]
+  // Indexes: { "name": 1, "type": 1 (unique: true) } (ensures name is unique per type)
+  "created_by_admin_id": "ObjectId()", // Reference to the admin user who created the tag
+  // Ref: "users"
+  "created_at": "ISODate()", // Timestamp of document creation
+  "updated_at": "ISODate()"  // Timestamp of last document update
+}
+*/
+
+// --------------------------------------------------------------------------
+// 3. `categories` Collection Schema
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "name": "String", // Name of the category (e.g., "Immune Support", "Joint Health")
+  "slug": "String", // URL-friendly version of the name (e.g., "immune-support")
+  // Indexes: { "slug": 1 (unique: true) }
+  "description": "String", // Optional description for the category
+  "parent_category_id": "ObjectId()", // Reference to a parent category for sub-categories (optional)
+  // Ref: "categories"
+  // Indexes: { "parent_category_id": 1 }
+  "ancestor_ids": ["ObjectId()"], // Array of parent category ObjectIds, for easier tree traversal (optional)
+  // Ref: "categories"
+  // Indexes: { "ancestor_ids": 1 }
+  "type": "String", // Type of items this category is for
+  // Enum: ["product", "plan_template"]
+  // Default: "product"
+  // Indexes: { "type": 1 }
+  // Consider a compound unique index if name should be unique within a type and parent:
+  // Indexes: { "name": 1, "parent_category_id": 1, "type": 1 (unique: true) }
+  "display_order": "NumberInt", // Optional field for sorting categories in display
+  "icon_url": "String", // Optional URL for a category icon
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()"
+}
+*/
+
+// --------------------------------------------------------------------------
+// 4. `products` Collection Schema (USANA Supplements)
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "name": "String", // Product name (e.g., "CellSentials Vita Antioxidant")
+  // Indexes: { "name": "text" } (for full-text search), { "name": 1 } (for sorting/exact match)
+  "brand": "String", // Brand of the product
+  // Default: "USANA"
+  // Indexes: { "brand": 1 }
+  "sku": "String", // Stock Keeping Unit, unique identifier for the product (optional)
+  // Indexes: { "sku": 1 (unique: true, sparse: true) }
+  "description_short": "String", // Short description for list views (optional)
+  "description_long": "String", // Detailed description for product page (optional)
+  "category_id": "ObjectId()", // Reference to the 'categories' collection
+  // Ref: "categories" (where type='product')
+  // Indexes: { "category_id": 1 }
+  "images": ["String"], // Array of URLs for product images (optional)
+  "price": { // Embedded document for price information
+    "amount": "NumberDecimal", // Price amount
+    "currency": "String"      // Currency code (e.g., "USD", "CAD", "CNY")
+  },
+  "attributes": [{ // Array of product attributes (e.g., size, key ingredients)
+    "key": "String",   // Attribute name (e.g., "Tablet Count")
+    "value": "String"  // Attribute value (e.g., "112")
+  }],
+  "purchase_url": "String", // External URL to purchase the product, if applicable (optional)
+  "is_publicly_visible": "Boolean", // Whether the product is visible on the public showcase page
+  // Default: true
+  // Indexes: { "is_publicly_visible": 1 }
+  "stock_info": { // Information about central stock (optional, if not solely relying on client usage tracking)
+      "quantity_on_hand": "NumberInt", // Current stock level
+      "low_stock_threshold": "NumberInt" // Threshold for low stock warning
+  },
+  "default_dosage_unit": "String", // Default unit for dosage (e.g., "tablet", "scoop", "ml")
+  "tags": ["ObjectId()"], // Array of references to the 'tags' collection
+  // Ref: "tags" (where type='product')
+  "related_product_ids": ["ObjectId()"], // Array of ObjectIds referencing other related products (optional)
+  // Ref: "products"
+  "created_by_admin_id": "ObjectId()", // Reference to the admin user who added the product
+  // Ref: "users"
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()"
+}
+*/
+
+// --------------------------------------------------------------------------
+// 5. `plan_templates` Collection Schema
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "name": "String", // Name of the plan template (e.g., "Standard Immune Boost Protocol")
+  // Indexes: { "name": 1 (unique: true) }
+  "description": "String", // Description of what the plan template is for (optional)
+  "target_symptoms": ["String"], // Array of symptoms this plan aims to address (optional)
+  // Indexes: { "target_symptoms": 1 }
+  "intended_audience_tags": ["String"], // Descriptive tags for the target audience (e.g., "Adults", "Athletes") (optional)
+  "category_id": "ObjectId()", // Reference to 'categories' for organizing plan templates (optional)
+  // Ref: "categories" (where type='plan_template')
+  "default_duration_days": "NumberInt", // Typical duration of the plan in days (optional)
+  "items": [{ // Array of products and their usage instructions in this template
+    "_id": "ObjectId()", // Auto-generated ID for this sub-document item
+    "product_id": "ObjectId()", // Reference to the 'products' collection
+    // Ref: "products"
+    "product_name_snapshot": "String", // Denormalized product name (at the time of template creation)
+    "default_dosage_amount": "NumberDecimal", // Default dosage amount
+    "default_dosage_unit": "String", // Default dosage unit (e.g., "tablet")
+    "default_frequency_value": "NumberInt", // E.g., 2 (for twice)
+    "default_frequency_unit": "String", // E.g., "per_day", "per_week"
+    "default_timing_instructions": "String", // E.g., "with meals", "morning" (optional)
+    "default_item_duration_value": "NumberInt", // Duration for this specific item (optional)
+    "default_item_duration_unit": "String", // Unit for item duration ("days", "weeks") (optional)
+    "notes_for_admin": "String" // Internal notes for the admin when using this template (optional)
+  }],
+  "created_by_admin_id": "ObjectId()", // Reference to the admin user who created the template
+  // Ref: "users"
+  "is_sharable_globally": "Boolean", // Whether this template can be shared with/used by other admins (optional)
+  // Default: false
+  "tags": ["ObjectId()"], // Array of references to the 'tags' collection
+  // Ref: "tags" (where type='plan_template')
+  "version": "NumberInt", // Version number for the template
+  // Default: 1
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()"
+}
+*/
+
+// --------------------------------------------------------------------------
+// 6. `plans` Collection Schema (Client-Specific Assigned Plans)
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated for this specific client plan instance
+  "customer_id": "ObjectId()", // Reference to the 'users' collection (the client)
+  // Ref: "users" (where role='customer')
+  // Indexes: { "customer_id": 1 }
+  "assigned_by_admin_id": "ObjectId()", // Reference to the 'users' collection (the admin who assigned/manages this plan)
+  // Ref: "users" (where role includes 'admin' or 'system_admin')
+  // Indexes: { "assigned_by_admin_id": 1 }
+  "plan_template_id": "ObjectId()", // Reference to the 'plan_templates' collection if derived from a template (optional)
+  // Ref: "plan_templates"
+  // Indexes: { "plan_template_id": 1 }
+  "name": "String", // Name of this specific plan instance (e.g., "Jane Doe - Wellness Plan - Month 1")
+  "description": "String", // Optional description or notes for this client's plan
+  "target_symptoms": ["String"], // Symptoms this plan is addressing for this client (optional)
+  "expected_outcome": "String", // Expected results for this client (optional)
+  "start_date": "ISODate()", // Date the plan starts for the client
+  // Indexes: { "start_date": 1 }
+  "estimated_end_date": "ISODate()", // Calculated or manually set estimated end date (optional)
+  // Indexes: { "estimated_end_date": 1 }
+  "actual_end_date": "ISODate()", // Actual date the plan was completed or cancelled (optional)
+  "status": "String", // Current status of the plan
+  // Enum: ["active", "paused", "completed", "cancelled", "pending_review"]
+  // Default: "active"
+  // Indexes: { "status": 1 }
+  "items": [{ // Array of products and their specific usage for this client's plan
+    "_id": "ObjectId()", // Auto-generated ID for this sub-document item, crucial for linking with purchase_logs
+    "product_id": "ObjectId()", // Reference to the 'products' collection
+    // Ref: "products"
+    "product_name_snapshot": "String", // Denormalized product name (at the time this plan item was set)
+    "dosage_amount": "NumberDecimal", // Specific dosage amount for this client
+    "dosage_unit": "String", // Specific dosage unit for this client
+    "frequency_value": "NumberInt", // E.g., 1
+    "frequency_unit": "String", // E.g., "per_day", "every_other_day"
+    "timing_instructions": "String", // E.g., "before breakfast" (optional)
+    "item_duration_value": "NumberInt", // Duration for this item in this plan (optional)
+    "item_duration_unit": "String", // Unit for item duration ("days", "weeks") (optional)
+    "item_start_date_offset_days": "NumberInt", // Offset in days from plan start_date for this item to begin
+    // Default: 0
+    "notes": "String" // Specific notes for this item for this client (optional)
+  }],
+  "total_estimated_cost": { // Optional calculated total cost for the plan
+    "amount": "NumberDecimal",
+    "currency": "String"
+  },
+  "last_consumption_calculation_at": "ISODate()", // Timestamp of the last time product consumption/remaining was calculated (optional)
+  "progress_notes": "String", // General notes on the client's progress with this plan (optional)
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()"
+}
+*/
+
+// --------------------------------------------------------------------------
+// 7. `purchase_logs` Collection Schema
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "customer_id": "ObjectId()", // Reference to the 'users' collection (the client who made the purchase)
+  // Ref: "users" (where role='customer')
+  // Indexes: { "customer_id": 1 }
+  "logged_by_admin_id": "ObjectId()", // Reference to the admin who recorded the purchase, if applicable (optional)
+  // Ref: "users" (where role includes 'admin' or 'system_admin')
+  "order_reference_id": "String", // External order ID, if any (optional)
+  // Indexes: { "order_reference_id": 1 (sparse: true) }
+  "purchase_date": "ISODate()", // Date and time of the purchase
+  // Default: now
+  // Indexes: { "purchase_date": 1 }
+  "total_amount": "NumberDecimal", // Total amount of the purchase
+  "currency": "String", // Currency code (e.g., "USD", "CAD", "CNY")
+  // Default: system default currency
+  "payment_status": "String", // Status of the payment
+  // Enum: ["paid", "pending", "refunded", "failed"]
+  // Default: "paid"
+  // Indexes: { "payment_status": 1 }
+  "notes": "String", // Optional notes about the purchase
+  "items": [{ // Array of items included in this purchase
+    "_id": "ObjectId()", // Auto-generated ID for this sub-document item
+    "product_id": "ObjectId()", // Reference to the 'products' collection
+    // Ref: "products"
+    "product_name_snapshot": "String", // Denormalized product name at the time of purchase
+    "sku_snapshot": "String", // Denormalized SKU at the time of purchase (optional)
+    "quantity": "NumberInt", // Quantity of this product purchased (Min: 1)
+    "unit_price_snapshot": "NumberDecimal", // Price per unit at the time of purchase
+    "total_item_price_snapshot": "NumberDecimal", // quantity * unit_price_snapshot
+    "linked_plan_id": "ObjectId()", // Reference to the 'plans' collection if this purchase is related to a plan (optional)
+    // Ref: "plans"
+    // Indexes: { "items.linked_plan_id": 1 (sparse: true) }
+    "linked_plan_item_id": "ObjectId()" // Reference to a specific item within the 'plans.items' array (optional)
+    // This refers to `plans.items._id`
+    // Indexes: { "items.linked_plan_item_id": 1 (sparse: true) }
+  }],
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()" // Purchase logs are generally immutable, but timestamp is good practice
+}
+*/
+
+// --------------------------------------------------------------------------
+// 8. `follow_ups` Collection Schema (Client Follow-up/Survey Records)
+// --------------------------------------------------------------------------
+/*
+{
+  "_id": "ObjectId()", // Primary Key, auto-generated
+  "customer_id": "ObjectId()", // Reference to the 'users' collection (the client)
+  // Ref: "users" (where role='customer')
+  // Indexes: { "customer_id": 1 }
+  "conducted_by_admin_id": "ObjectId()", // Reference to the admin who conducted the follow-up
+  // Ref: "users" (where role includes 'admin' or 'system_admin')
+  // Indexes: { "conducted_by_admin_id": 1 }
+  "linked_plan_id": "ObjectId()", // Reference to the 'plans' collection if this follow-up is related to a specific plan (optional)
+  // Ref: "plans"
+  // Indexes: { "linked_plan_id": 1 }
+  "follow_up_date": "ISODate()", // Date and time of the follow-up
+  // Default: now
+  // Indexes: { "follow_up_date": 1 }
+  "communication_method": "String", // How the follow-up was conducted (optional)
+  // Enum: ["phone", "email", "in_person", "video_call", "chat"]
+  "title": "String", // Title or subject of the follow-up (optional)
+  "summary": "String", // Brief summary of the follow-up interaction (optional)
+  "details_log": [{ // Chronological log of the conversation or detailed notes
+      "_id": "ObjectId()", // Auto-generated for each log entry
+      "timestamp": "ISODate()", // Time of this specific entry
+      // Default: now
+      "author_role": "String", // "admin" or "customer" (if customer can contribute to log)
+      "log_entry": "String" // The actual text of the communication
+  }],
+  "customer_feedback": { // Structured feedback from the customer
+    "overall_satisfaction_rating": "NumberInt", // E.g., 1-5 (optional)
+    "symptom_changes_reported": "String", // Customer's report on symptom changes (optional)
+    "side_effects_reported": "String", // Any side effects reported by the customer (optional)
+    "questions_or_concerns": "String" // Customer's questions or concerns (optional)
+  },
+  "admin_notes_observations": "String", // Admin's internal notes, observations, or assessment (optional)
+  "action_items_next_steps": "String", // Any action items or next steps decided (optional)
+  "tags": ["ObjectId()"], // Array of references to the 'tags' collection for categorizing follow-ups
+  // Ref: "tags" (where type='follow_up')
+  "attachments": [{ // Optional attachments related to the follow-up
+      "file_name": "String",
+      "file_url": "String", // URL to the stored file
+      "uploaded_at": "ISODate()"
+  }],
+  "created_at": "ISODate()",
+  "updated_at": "ISODate()"
+}
+*/
+

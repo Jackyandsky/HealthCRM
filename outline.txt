@@ -1,0 +1,318 @@
+# Project: Health Tracking (CRM) - Detailed Breakdown
+
+## Phase 1: Project Setup & Planning
+  - **Define detailed project scope & objectives**
+    - Clearly outline "Must-have", "Should-have", "Could-have", "Won't-have" (MoSCoW) features
+    - Define success metrics for the project
+  - **Identify target users (Admin, Customer) and define personas**
+    - Create detailed Admin persona and their primary goals/pain points
+    - Create detailed Customer persona and their primary goals/pain points
+  - **Gather detailed requirements for each feature module**
+    - Requirements for User Management (Admin & Customer roles)
+    - Requirements for Product Management
+    - Requirements for Customer Plan Creation & Management
+    - Requirements for Purchase Logging
+    - Requirements for Survey & Feedback Collection
+    - Requirements for Tracking & Reporting
+  - **Finalize technology stack**
+    - Backend: Next.js (API Routes), MongoDB
+    - Frontend: Next.js, React
+    - Database Driver/ORM: Mongoose (or native MongoDB driver)
+    - State Management (Frontend): React Context / Zustand / Redux (Decide)
+    - UI Library/Framework (Frontend): Tailwind CSS / Material-UI / Ant Design (Decide)
+    - Authentication: NextAuth.js or custom JWT implementation
+  - **Setup version control**
+    - Create Git repository (e.g., GitHub, GitLab, Bitbucket)
+    - Define branching strategy (e.g., Gitflow)
+  - **Plan project timeline and milestones**
+    - Create a Gantt chart or similar visual timeline
+    - Define key deliverables and deadlines for each phase
+  - **Define communication plan & collaboration tools**
+    - Choose tools for team communication (e.g., Slack, Microsoft Teams)
+    - Setup project management tool (e.g., ClickUp, Jira, Trello - using this document as a base)
+
+## Phase 2: Design
+  - **Design Database Schema (MongoDB)**
+    - **Finalize `users` Collection schema**
+      - `_id`: ObjectId (Primary Key)
+      - `name`: String
+      - `email`: String (Unique, Indexed)
+      - `phone`: String (Optional)
+      - `password_hash`: String (Hashed password)
+      - `role`: String (Enum: "admin", "customer", Indexed)
+      - `managing_admin_id`: ObjectId (Ref to `users`, for customer's admin, Indexed, Optional)
+      - `tags`: Array of Strings (User-specific tags/labels)
+      - `created_at`: ISODate
+      - `updated_at`: ISODate
+      - `other_info`: Object (Flexible additional info)
+    - **Finalize `tags` Collection schema (for user/product classification)**
+      - `_id`: ObjectId (Primary Key)
+      - `name`: String (Unique, Indexed)
+      - `type`: String (Enum: "user", "product", "general", Indexed)
+    - **Finalize `categories` Collection schema (for products)**
+      - `_id`: ObjectId (Primary Key)
+      - `name`: String (Unique, Indexed)
+      - `parent_category_id`: ObjectId (Ref to `categories`, for sub-categories, Optional, Indexed)
+    - **Finalize `products` Collection schema**
+      - `_id`: ObjectId (Primary Key)
+      - `name`: String (Indexed)
+      - `description`: String (Optional)
+      - `category_id`: ObjectId (Ref to `categories`, Indexed, Optional)
+      - `image_url`: String (Optional)
+      - `purchase_url`: String (Optional)
+      - `creator_id`: ObjectId (Ref to `users` (admin), Indexed)
+      - `is_visible`: Boolean (Default: true)
+      - `stock_level`: NumberInt (Optional)
+      - `default_dosage_unit`: String (e.g., "capsule", "mg", "ml", Optional)
+      - `tags`: Array of Strings (Product-specific tags/labels)
+      - `created_at`: ISODate
+      - `updated_at`: ISODate
+    - **Finalize `plans` Collection schema**
+      - `_id`: ObjectId (Primary Key)
+      - `customer_id`: ObjectId (Ref to `users` (customer), Indexed)
+      - `admin_id`: ObjectId (Ref to `users` (admin), Indexed)
+      - `name`: String (e.g., "Initial Gut Health Plan")
+      - `description`: String (Optional)
+      - `target_symptoms`: String (Optional)
+      - `expected_outcome`: String (Optional)
+      - `start_date`: ISODate (Indexed)
+      - `end_date`: ISODate (Optional, Indexed)
+      - `status`: String (Enum: "active", "completed", "cancelled", Default: "active", Indexed)
+      - `items`: Array of Embedded Objects
+        - `plan_item_ref_id`: ObjectId (Manually generated unique ID for this item within the plan, Indexed if queried directly)
+        - `product_id`: ObjectId (Ref to `products`, Indexed)
+        - `product_name`: String (Optional, denormalized for quick display)
+        - `dosage_amount`: NumberDecimal or NumberInt
+        - `dosage_unit`: String
+        - `frequency`: String (e.g., "daily", "twice daily")
+        - `timing`: String (e.g., "with meals", "before bed", Optional)
+        - `notes`: String (Optional)
+      - `created_at`: ISODate
+      - `updated_at`: ISODate
+    - **Finalize `purchase_logs` Collection schema**
+      - `_id`: ObjectId (Primary Key)
+      - `customer_id`: ObjectId (Ref to `users` (customer), Indexed)
+      - `admin_id`: ObjectId (Ref to `users` (admin who logged), Indexed)
+      - `purchase_date`: ISODate (Indexed)
+      - `total_amount`: NumberDecimal (Optional)
+      - `notes`: String (Optional)
+      - `items`: Array of Embedded Objects
+        - `product_id`: ObjectId (Ref to `products`, Indexed)
+        - `product_name`: String (Optional, denormalized)
+        - `quantity`: NumberInt
+        - `unit_price`: NumberDecimal (Optional)
+        - `plan_item_ref_id`: ObjectId (Ref to `plans.items.plan_item_ref_id`, Indexed, Optional)
+      - `created_at`: ISODate
+    - **Finalize `surveys` Collection schema**
+      - `_id`: ObjectId (Primary Key)
+      - `customer_id`: ObjectId (Ref to `users` (customer), Indexed)
+      - `admin_id`: ObjectId (Ref to `users` (admin who logged), Indexed)
+      - `plan_id`: ObjectId (Ref to `plans`, Optional, Indexed)
+      - `survey_date`: ISODate (Indexed)
+      - `feedback_content`: String
+      - `rating`: NumberInt (Optional, e.g., 1-5)
+      - `created_at`: ISODate
+    - **Define relationships and data integrity considerations** (e.g., use of indexes, validation rules)
+  - **Design API Endpoints (RESTful or GraphQL - Assuming RESTful for Next.js API routes)**
+    - **Authentication API (`/api/auth/...`)**
+      - `POST /api/auth/login` (Admin, Customer)
+      - `POST /api/auth/register` (Admin initial setup, or Customer by admin)
+      - `POST /api/auth/logout`
+      - `GET /api/auth/session` (Get current user session)
+    - **Admin - Customer Management API (`/api/admin/customers/...`)**
+      - `POST /api/admin/customers` (Create customer)
+      - `GET /api/admin/customers` (List customers, with filters/pagination)
+      - `GET /api/admin/customers/{customerId}` (Get customer details)
+      - `PUT /api/admin/customers/{customerId}` (Update customer)
+      - `DELETE /api/admin/customers/{customerId}` (Deactivate/Delete customer)
+    - **Admin - Product Management API (`/api/admin/products/...`)**
+      - `POST /api/admin/products`
+      - `GET /api/admin/products`
+      - `GET /api/admin/products/{productId}`
+      - `PUT /api/admin/products/{productId}`
+      - `DELETE /api/admin/products/{productId}`
+    - **Admin - Plan Management API (`/api/admin/plans/...`)** (Often nested under customer or as top-level resource)
+      - `POST /api/admin/customers/{customerId}/plans` or `/api/admin/plans` (if `customer_id` in body)
+      - `GET /api/admin/customers/{customerId}/plans` or `/api/admin/plans?customerId={id}`
+      - `GET /api/admin/plans/{planId}`
+      - `PUT /api/admin/plans/{planId}`
+      - `DELETE /api/admin/plans/{planId}`
+    - **Admin - Purchase Log API (`/api/admin/purchases/...`)**
+      - `POST /api/admin/customers/{customerId}/purchases` or `/api/admin/purchases`
+      - `GET /api/admin/customers/{customerId}/purchases` or `/api/admin/purchases?customerId={id}`
+      - `GET /api/admin/purchases/{purchaseId}`
+      - `PUT /api/admin/purchases/{purchaseId}`
+    - **Admin - Survey API (`/api/admin/surveys/...`)**
+      - `POST /api/admin/customers/{customerId}/surveys` or `/api/admin/surveys`
+      - `GET /api/admin/customers/{customerId}/surveys` or `/api/admin/surveys?customerId={id}`
+      - `GET /api/admin/surveys/{surveyId}`
+      - `PUT /api/admin/surveys/{surveyId}`
+    - **Admin - Tag & Category Management API (`/api/admin/tags`, `/api/admin/categories`)**
+      - Standard CRUD endpoints for tags and categories.
+    - **Customer Portal API (`/api/customer/...`) (if applicable)**
+      - `GET /api/customer/profile`
+      - `PUT /api/customer/profile`
+      - `GET /api/customer/plans` (View own plans)
+      - `GET /api/customer/plans/{planId}`
+      - `POST /api/customer/feedback` (Submit feedback)
+    - **Define common API response structures (success, error) and status codes**
+  - **Design UI/UX for Admin Portal**
+    - **Create Style Guide / Design System** (Colors, Typography, Spacing, Component styles)
+    - **Wireframe Admin Dashboard:** Key metrics, recent activity, navigation.
+    - **Wireframe Customer Management pages:**
+      - Customer List: Table layout, search, filter, pagination, add button.
+      - Customer Detail: Tabs/sections for Profile, Plans, Purchases, Surveys, Timeline.
+      - Customer Create/Edit Forms: Input fields, tag selection.
+    - **Wireframe Product Management pages:** List, search, filter, create/edit forms.
+    - **Wireframe Plan Creation/Edit interface:** Product selection, dosage inputs, scheduling.
+    - **Wireframe Purchase Log entry interface.**
+    - **Wireframe Survey entry interface.**
+    - **Prototype key user flows** (e.g., creating a customer and their first plan).
+  - **Design UI/UX for Customer Portal (if applicable)**
+    - **Wireframe Customer Dashboard/My Plan page:** Display current plan, upcoming dosages.
+    - **Wireframe Profile page.**
+    - **Wireframe Feedback submission page/form.**
+
+## Phase 3: Database Implementation
+  - **Setup MongoDB instance** (local Docker, or cloud like MongoDB Atlas)
+    - Configure connection strings and security (users, IP whitelisting).
+  - **Implement defined database schema**
+    - Create collections.
+    - Define and create initial indexes for optimal query performance.
+    - Implement schema validation rules within MongoDB (if using Atlas or MongoDB Enterprise).
+  - **Write scripts for initial data seeding**
+    - Create default admin user.
+    - Seed sample/default categories and tags.
+    - (Optional) Seed sample products or customers for development/testing.
+
+## Phase 4: Backend Development (Next.js API Routes)
+  - **Setup Next.js project for backend logic**
+    - Organize API route handlers.
+    - Setup database connection utility/middleware.
+  - **Implement User Authentication & Authorization**
+    - Implement login/logout functionality (e.g., using NextAuth.js with credentials provider).
+    - Implement session management.
+    - Implement role-based access control (RBAC) middleware for API routes.
+  - **Implement API endpoint logic for each resource (Admin & Customer)**
+    - **User Management:** Create, Read, Update, Delete (CRUDA) logic.
+    - **Product Management:** CRUDA logic.
+    - **Plan Management:** CRUDA logic, including handling embedded `items`.
+    - **Purchase Log Management:** CRUDA logic, including handling embedded `items` and linking to `plan_item_ref_id`.
+    - **Survey Management:** CRUDA logic.
+    - **Tag & Category Management:** CRUDA logic.
+  - **Implement business logic**
+    - E.g., calculating product remaining quantity based on plans and purchases (for tracking/reminders).
+    - Logic for timeline generation.
+  - **Implement robust error handling and consistent response formatting.**
+  - **Implement input validation and data sanitization for all API requests.**
+  - **Setup API documentation tool** (e.g., Swagger/OpenAPI with `swagger-jsdoc` and `swagger-ui-express` or similar for Next.js).
+  - **Configure backend environment variables** (`.env.local` for development, platform-specific for production).
+
+## Phase 5: Frontend Development (React/Next.js Pages)
+  - **Setup Next.js project for frontend**
+    - Configure folder structure (`components`, `pages` or `app`, `hooks`, `contexts`, `services/api`).
+  - **Develop reusable UI Core Components**
+    - `Button`, `Input`, `Textarea`, `SelectDropdown`, `DatePicker`
+    - `Table` (with sorting, pagination, filtering capabilities)
+    - `Modal` / `Dialog`
+    - `Card`
+    - `Layout` components (AdminLayout, CustomerLayout, AuthLayout)
+    - `Spinner` / `LoadingIndicator`
+    - `Notification` / `Toast`
+  - **Implement Admin Portal Pages & Components**
+    - **Authentication Pages:** Login.
+    - **Dashboard Page:** Display summaries and charts.
+    - **Customer Management:**
+      - Customer List Page (with table, search, filter, add button).
+      - Customer Detail Page (tabbed interface: profile, plans, purchases, surveys).
+      - Customer Create/Edit Form (modal or separate page).
+    - **Product Management:** Product List Page, Product Create/Edit Form.
+    - **Plan Management Interface:** (likely within Customer Detail Page)
+      - Display Plan Items.
+      - Form to Add/Edit Plan Items (product selection, dosage details).
+    - **Purchase Log Entry Form.**
+    - **Survey Entry Form.**
+    - **Tag/Category Management UI.**
+  - **Implement Customer Portal Pages & Components (if applicable)**
+    - **Authentication Pages:** Login, (optional: Registration, Forgot Password).
+    - **Dashboard/My Plan Page:** View current plan details.
+    - **Profile Page:** View/edit basic info.
+    - **Feedback Submission Form.**
+  - **Integrate frontend pages with Backend APIs**
+    - Create API service functions/hooks (e.g., using `Workspace` or `axios`) for all backend calls.
+    - Handle API loading states, successes, and errors gracefully in the UI.
+  - **Implement client-side state management**
+    - Global state for user session, possibly notifications.
+    - Local/Component state for forms, UI interactions.
+    - Server state caching/synchronization (e.g., React Query, SWR).
+  - **Implement comprehensive form validation (client-side) and user feedback.**
+  - **Ensure responsive design and cross-browser compatibility.**
+  - **Implement internationalization (i18n) if required.**
+  - **Adhere to accessibility (a11y) best practices (WCAG).**
+
+## Phase 6: Testing
+  - **Setup Testing Environment & Frameworks**
+    - Jest / Vitest for unit/integration tests.
+    - React Testing Library for frontend component testing.
+    - Cypress / Playwright for E2E tests.
+  - **Write Unit Tests for Backend**
+    - Test API route handlers (mocking DB calls).
+    - Test business logic services/utils.
+    - Aim for high coverage of critical logic.
+  - **Write Unit Tests for Frontend**
+    - Test individual React components for rendering and interaction.
+    - Test custom hooks and state management logic.
+  - **Conduct Integration Tests**
+    - Test interaction between API endpoints and the database.
+    - Test frontend API service calls and data transformation.
+    - Test key backend service integrations.
+  - **Perform End-to-End (E2E) Testing**
+    - Automate key user flows:
+      - Admin: Login -> Create Customer -> Create Plan -> Log Purchase -> Log Survey.
+      - Admin: Product Management CRUD.
+      - Customer (if portal): Login -> View Plan -> Submit Feedback.
+  - **User Acceptance Testing (UAT)**
+    - Prepare UAT test cases.
+    - Conduct UAT sessions with stakeholders or representative users.
+    - Collect and prioritize UAT feedback.
+  - **Performance Testing (Optional but Recommended)**
+    - Test API response times under load.
+    - Analyze frontend page load times.
+  - **Security Testing (Optional but Recommended)**
+    - Basic vulnerability scanning (e.g., OWASP ZAP).
+    - Review authentication/authorization logic.
+  - **Bug fixing and iterative testing based on results.**
+  - **Maintain a bug tracking system.**
+
+## Phase 7: Deployment
+  - **Choose and configure hosting platforms**
+    - Next.js Frontend/Backend: Vercel, Netlify, AWS Amplify, or self-hosted Node.js server.
+    - MongoDB: MongoDB Atlas, or self-hosted.
+  - **Configure production environment**
+    - Set up environment variables securely.
+    - Configure custom domains and SSL certificates.
+  - **Setup CI/CD (Continuous Integration / Continuous Deployment) pipeline**
+    - Automate build process.
+    - Automate running tests.
+    - Automate deployment to staging and production environments.
+    - (e.g., GitHub Actions, GitLab CI, Jenkins).
+  - **Database migration strategy (if applicable for schema changes post-initial deployment).**
+  - **Implement backup and restore procedures for the production database.**
+  - **Deploy application to a Staging environment for final checks.**
+  - **Deploy application to Production environment.**
+  - **Perform comprehensive post-deployment smoke tests.**
+
+## Phase 8: Post-Deployment & Maintenance
+  - **Monitor application health and performance**
+    - Setup logging (e.g., Sentry, Logtail, or platform-specific logging).
+    - Monitor server health, API response times, error rates, database performance.
+  - **Gather user feedback and bug reports.**
+  - **Establish support channels and processes.**
+  - **Plan and prioritize V2 features, enhancements, and bug fixes.**
+    - Maintain a product backlog.
+  - **Perform regular maintenance:**
+    - Update dependencies.
+    - Apply security patches.
+    - Monitor database growth and performance.
+  - **Create and update user documentation and admin guides.**
+  - **Review analytics and user behavior to inform future development.**
