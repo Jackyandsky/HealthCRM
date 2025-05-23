@@ -24,19 +24,23 @@ interface User {
 }
 
 interface DashboardStats {
-  totalPatients: number
-  todayAppointments: number
-  pendingBills: number
-  totalRevenue: number
+  totalCustomers: number // Renamed from totalPatients
+  activePlans?: number;
+  upcomingFollowUps?: number;
+  // todayAppointments: number, // Removed
+  // pendingBills: number, // Removed
+  // totalRevenue: number, // Removed
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [stats, setStats] = useState<DashboardStats>({
-    totalPatients: 0,
-    todayAppointments: 0,
-    pendingBills: 0,
-    totalRevenue: 0,
+    totalCustomers: 0,
+    activePlans: 0,
+    upcomingFollowUps: 0,
+    // todayAppointments: 0, // Removed
+    // pendingBills: 0, // Removed
+    // totalRevenue: 0, // Removed
   })
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -96,13 +100,13 @@ export default function DashboardPage() {
   }
 
   const menuItems = [
-    {
-      name: '患者管理',
-      href: '/dashboard/patients',
-      icon: UserGroupIcon,
-      description: '管理患者信息和档案',
-      roles: ['admin', 'doctor', 'nurse', 'receptionist'],
-    },
+    // { // Removed "患者管理" (Patient Management) menu item
+    //   name: '患者管理',
+    //   href: '/dashboard/patients',
+    //   icon: UserGroupIcon,
+    //   description: '管理患者信息和档案',
+    //   roles: ['admin', 'doctor', 'nurse', 'receptionist'],
+    // },
     {
       name: '用户管理',
       href: '/dashboard/users',
@@ -110,27 +114,27 @@ export default function DashboardPage() {
       description: '管理系统用户和权限',
       roles: ['admin'],
     },
-    {
-      name: '预约管理',
-      href: '/dashboard/appointments',
-      icon: CalendarIcon,
-      description: '预约调度和管理',
-      roles: ['admin', 'doctor', 'nurse', 'receptionist'],
-    },
-    {
-      name: '医疗记录',
-      href: '/dashboard/medical-records',
-      icon: DocumentTextIcon,
-      description: '电子病历管理',
-      roles: ['admin', 'doctor', 'nurse'],
-    },
-    {
-      name: '账单管理',
-      href: '/dashboard/billing',
-      icon: CurrencyDollarIcon,
-      description: '财务和账单',
-      roles: ['admin', 'receptionist'],
-    },
+    // { // Removed "预约管理" (Appointment Management)
+    //   name: '预约管理',
+    //   href: '/dashboard/appointments',
+    //   icon: CalendarIcon,
+    //   description: '预约调度和管理',
+    //   roles: ['admin', 'doctor', 'nurse', 'receptionist'],
+    // },
+    // { // Removed "医疗记录" (Medical Records)
+    //   name: '医疗记录',
+    //   href: '/dashboard/medical-records',
+    //   icon: DocumentTextIcon,
+    //   description: '电子病历管理',
+    //   roles: ['admin', 'doctor', 'nurse'],
+    // },
+    // { // Removed "账单管理" (Billing Management)
+    //   name: '账单管理',
+    //   href: '/dashboard/billing',
+    //   icon: CurrencyDollarIcon,
+    //   description: '财务和账单',
+    //   roles: ['admin', 'receptionist'],
+    // },
     {
       name: '数据分析',
       href: '/dashboard/analytics',
@@ -207,10 +211,10 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        总患者数
+                        总客户数
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats.totalPatients}
+                        {stats.totalCustomers}
                       </dd>
                     </dl>
                   </div>
@@ -218,65 +222,52 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CalendarIcon className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        今日预约
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats.todayAppointments}
-                      </dd>
-                    </dl>
+            {/* Placeholder for Active Plans */}
+            {stats.activePlans !== undefined && (
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <DocumentTextIcon className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">
+                          活跃计划数
+                        </dt>
+                        <dd className="text-lg font-medium text-gray-900">
+                          {stats.activePlans}
+                        </dd>
+                      </dl>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        待处理账单
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats.pendingBills}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <ChartBarIcon className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        月收入
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        ¥{stats.totalRevenue.toLocaleString()}
-                      </dd>
-                    </dl>
+            {/* Placeholder for Upcoming Follow-ups */}
+            {stats.upcomingFollowUps !== undefined && (
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <CalendarIcon className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">
+                          待回访数
+                        </dt>
+                        <dd className="text-lg font-medium text-gray-900">
+                          {stats.upcomingFollowUps}
+                        </dd>
+                      </dl>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
+            {/* Removed Today Appointments, Pending Bills, Total Revenue cards */}
           </div>
 
           {/* Quick Actions */}

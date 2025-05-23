@@ -40,11 +40,11 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
           <h2 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-            现代化医疗
+            客户健康与消费
             <span className="text-primary-600">管理系统</span>
           </h2>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            集成患者管理、预约调度、医疗记录和账单管理的一体化解决方案
+            集成客户管理、健康计划、购买记录和用户反馈的一体化解决方案
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
@@ -61,54 +61,55 @@ export default function Home() {
         {/* Features Grid */}
         <div className="mt-16">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Patient Management */}
+            {/* Customer Management */}
             <div className="card">
               <div className="card-body text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
                   <UserGroupIcon className="h-6 w-6" />
                 </div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">患者管理</h3>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">客户管理</h3>
                 <p className="mt-2 text-base text-gray-500">
-                  完整的患者信息管理，包括病史、过敏史、用药记录等
+                  完整的客户信息管理，包括购买历史、健康计划等
                 </p>
               </div>
             </div>
 
-            {/* Appointment Scheduling */}
+            {/* Plan Management (New Feature) */}
             <div className="card">
               <div className="card-body text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
-                  <CalendarIcon className="h-6 w-6" />
+                  <CalendarIcon className="h-6 w-6" /> {/* Re-using icon, consider changing if a better one is available */}
                 </div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">预约管理</h3>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">计划管理</h3>
                 <p className="mt-2 text-base text-gray-500">
-                  智能预约调度系统，支持在线预约和时间冲突检测
+                  创建和管理客户的健康计划和产品使用方案
                 </p>
               </div>
             </div>
 
-            {/* Medical Records */}
+            {/* Follow-up/Feedback Management (New Feature) */}
             <div className="card">
               <div className="card-body text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
-                  <DocumentTextIcon className="h-6 w-6" />
+                  <DocumentTextIcon className="h-6 w-6" /> {/* Re-using icon */}
                 </div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">医疗记录</h3>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">回访记录</h3>
                 <p className="mt-2 text-base text-gray-500">
-                  电子病历管理，支持诊断、治疗方案和检验结果记录
+                  记录客户回访信息和产品使用反馈
                 </p>
               </div>
             </div>
 
-            {/* Billing */}
+            {/* Product Management (New or existing, but relevant to CRM) */}
             <div className="card">
               <div className="card-body text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                  {/* Assuming CurrencyDollarIcon or similar for products/purchases */}
                   <CurrencyDollarIcon className="h-6 w-6" />
                 </div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">账单管理</h3>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">产品与购买</h3>
                 <p className="mt-2 text-base text-gray-500">
-                  自动化账单生成，保险理赔处理和付款追踪
+                  管理产品信息并记录客户购买历史
                 </p>
               </div>
             </div>
@@ -151,15 +152,15 @@ export default function Home() {
             <div className="mt-8 grid grid-cols-2 gap-8 md:grid-cols-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-600">500+</div>
-                <div className="text-sm text-gray-500">活跃患者</div>
+                <div className="text-sm text-gray-500">活跃用户</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary-600">1200+</div>
-                <div className="text-sm text-gray-500">预约记录</div>
+                <div className="text-3xl font-bold text-primary-600">100+</div>
+                <div className="text-sm text-gray-500">健康计划</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary-600">50+</div>
-                <div className="text-sm text-gray-500">医护人员</div>
+                <div className="text-3xl font-bold text-primary-600">20+</div>
+                <div className="text-sm text-gray-500">管理人员</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary-600">98%</div>

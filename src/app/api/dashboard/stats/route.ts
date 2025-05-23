@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import connectDB from '@/lib/mongodb'
-import Patient from '@/models/Patient'
-import Appointment from '@/models/Appointment'
-import Billing from '@/models/Billing'
+// import Patient from '@/models/Patient' // Removed Patient model
+import User from '@/models/User' // Added User model
+// import Appointment from '@/models/Appointment' // Removed Appointment model
+// import Billing from '@/models/Billing' // Removed Billing model
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,15 +39,22 @@ export async function GET(request: NextRequest) {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
 
-    // Get basic stats (since we don't have appointments and billing collections populated yet)
-    const totalPatients = await Patient.countDocuments({ isActive: true })
+    // Get basic stats
+    const totalCustomers = await User.countDocuments({ role: 'customer', isActive: true })
+    
+    // Placeholder for future CRM stats
+    const activePlans = 0; // Replace with actual logic, e.g., User.countDocuments({ role: 'customer', 'plan.isActive': true })
+    const upcomingFollowUps = 0; // Replace with actual logic e.g. FollowUp.countDocuments({ date: { $gte: today, $lt: oneWeekFromToday } })
 
-    // Return mock data for now since we haven't created appointments and billing yet
+
+    // Updated stats response
     return NextResponse.json({
-      totalPatients,
-      todayAppointments: 3, // Mock data
-      pendingBills: 5, // Mock data
-      totalRevenue: 15420.50, // Mock data
+      totalCustomers,
+      activePlans, // Example new stat
+      upcomingFollowUps, // Example new stat
+      // todayAppointments: 3, // Mock data - REMOVED
+      // pendingBills: 5, // Mock data - REMOVED
+      // totalRevenue: 15420.50, // Mock data - REMOVED
     })
 
   } catch (error) {

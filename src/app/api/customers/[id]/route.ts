@@ -31,7 +31,8 @@ export async function GET(
     await connectDB()
 
     const customer = await Customer.findById(params.id)
-      .populate('salesRep', 'name employeeId')
+      .populate('salesRep', 'name employeeId email') // Added email to salesRep
+      .populate('user_id', 'name email role isActive') // Populate user info
 
     if (!customer) {
       return NextResponse.json(
@@ -93,7 +94,8 @@ export async function PUT(
       params.id,
       body,
       { new: true, runValidators: true }
-    ).populate('salesRep', 'name employeeId')
+    ).populate('salesRep', 'name employeeId email') // Added email to salesRep
+     .populate('user_id', 'name email role isActive') // Populate user info
 
     if (!customer) {
       return NextResponse.json(
