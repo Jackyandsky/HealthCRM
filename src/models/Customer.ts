@@ -1,7 +1,14 @@
 import mongoose from 'mongoose';
 
 const customerSchema = new mongoose.Schema({
-  customerId: {
+  user_id: { // Added user_id field for linking to User model
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+    index: true,
+  },
+  customerId: { // Retained existing customerId
     type: String,
     unique: true,
     required: true,

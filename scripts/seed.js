@@ -28,54 +28,10 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-// Patient Schema
-const patientSchema = new mongoose.Schema({
-  patientId: String,
-  firstName: String,
-  lastName: String,
-  email: String,
-  phone: String,
-  dateOfBirth: Date,
-  gender: String,
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String,
-  },
-  emergencyContact: {
-    name: String,
-    relationship: String,
-    phone: String,
-  },
-  insurance: {
-    provider: String,
-    policyNumber: String,
-    groupNumber: String,
-  },
-  medicalHistory: [{
-    condition: String,
-    diagnosedDate: Date,
-    notes: String,
-  }],
-  allergies: [{
-    allergen: String,
-    severity: String,
-    notes: String,
-  }],
-  medications: [{
-    name: String,
-    dosage: String,
-    frequency: String,
-    startDate: Date,
-    prescribedBy: String,
-  }],
-  isActive: { type: Boolean, default: true },
-}, { timestamps: true });
+// Removed Patient Schema
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
-const Patient = mongoose.models.Patient || mongoose.model('Patient', patientSchema);
+// Removed Patient Model
 
 async function seedUsers() {
   console.log('🌱 Seeding users...');
@@ -137,241 +93,7 @@ async function seedUsers() {
   return createdUsers;
 }
 
-async function seedPatients() {
-  console.log('🌱 Seeding patients...');
-  
-  const patients = [
-    {
-      patientId: 'P001',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@email.com',
-      phone: '+1-555-1001',
-      dateOfBirth: new Date('1985-03-15'),
-      gender: 'male',
-      address: {
-        street: '123 Main St',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        country: 'USA',
-      },
-      emergencyContact: {
-        name: 'Jane Doe',
-        relationship: 'Wife',
-        phone: '+1-555-1002',
-      },
-      insurance: {
-        provider: 'Blue Cross Blue Shield',
-        policyNumber: 'BC123456789',
-        groupNumber: 'GRP001',
-      },
-      medicalHistory: [
-        {
-          condition: 'Hypertension',
-          diagnosedDate: new Date('2020-01-15'),
-          notes: 'Well controlled with medication',
-        },
-      ],
-      allergies: [
-        {
-          allergen: 'Penicillin',
-          severity: 'moderate',
-          notes: 'Causes rash',
-        },
-      ],
-      medications: [
-        {
-          name: 'Lisinopril',
-          dosage: '10mg',
-          frequency: 'Once daily',
-          startDate: new Date('2020-01-15'),
-          prescribedBy: 'Dr. Johnson',
-        },
-      ],
-    },
-    {
-      patientId: 'P002',
-      firstName: 'Maria',
-      lastName: 'Garcia',
-      email: 'maria.garcia@email.com',
-      phone: '+1-555-1003',
-      dateOfBirth: new Date('1992-07-22'),
-      gender: 'female',
-      address: {
-        street: '456 Oak Ave',
-        city: 'Los Angeles',
-        state: 'CA',
-        zipCode: '90210',
-        country: 'USA',
-      },
-      emergencyContact: {
-        name: 'Carlos Garcia',
-        relationship: 'Husband',
-        phone: '+1-555-1004',
-      },
-      insurance: {
-        provider: 'Aetna',
-        policyNumber: 'AET987654321',
-        groupNumber: 'GRP002',
-      },
-      medicalHistory: [
-        {
-          condition: 'Diabetes Type 2',
-          diagnosedDate: new Date('2021-06-10'),
-          notes: 'Managing with diet and medication',
-        },
-      ],
-      allergies: [],
-      medications: [
-        {
-          name: 'Metformin',
-          dosage: '500mg',
-          frequency: 'Twice daily',
-          startDate: new Date('2021-06-10'),
-          prescribedBy: 'Dr. Chen',
-        },
-      ],
-    },
-    {
-      patientId: 'P003',
-      firstName: 'Robert',
-      lastName: 'Johnson',
-      email: 'robert.johnson@email.com',
-      phone: '+1-555-1005',
-      dateOfBirth: new Date('1975-11-08'),
-      gender: 'male',
-      address: {
-        street: '789 Pine St',
-        city: 'Chicago',
-        state: 'IL',
-        zipCode: '60601',
-        country: 'USA',
-      },
-      emergencyContact: {
-        name: 'Susan Johnson',
-        relationship: 'Sister',
-        phone: '+1-555-1006',
-      },
-      insurance: {
-        provider: 'Cigna',
-        policyNumber: 'CIG456789123',
-        groupNumber: 'GRP003',
-      },
-      medicalHistory: [],
-      allergies: [
-        {
-          allergen: 'Shellfish',
-          severity: 'severe',
-          notes: 'Anaphylactic reaction',
-        },
-      ],
-      medications: [],
-    },
-    {
-      patientId: 'P004',
-      firstName: 'Emily',
-      lastName: 'Wilson',
-      email: 'emily.wilson@email.com',
-      phone: '+1-555-1007',
-      dateOfBirth: new Date('2010-04-12'),
-      gender: 'female',
-      address: {
-        street: '321 Elm St',
-        city: 'Houston',
-        state: 'TX',
-        zipCode: '77001',
-        country: 'USA',
-      },
-      emergencyContact: {
-        name: 'Jennifer Wilson',
-        relationship: 'Mother',
-        phone: '+1-555-1008',
-      },
-      insurance: {
-        provider: 'United Healthcare',
-        policyNumber: 'UHC789123456',
-        groupNumber: 'GRP004',
-      },
-      medicalHistory: [
-        {
-          condition: 'Asthma',
-          diagnosedDate: new Date('2015-09-20'),
-          notes: 'Exercise-induced asthma',
-        },
-      ],
-      allergies: [
-        {
-          allergen: 'Dust mites',
-          severity: 'mild',
-          notes: 'Causes sneezing and congestion',
-        },
-      ],
-      medications: [
-        {
-          name: 'Albuterol inhaler',
-          dosage: '90mcg',
-          frequency: 'As needed',
-          startDate: new Date('2015-09-20'),
-          prescribedBy: 'Dr. Rodriguez',
-        },
-      ],
-    },
-    {
-      patientId: 'P005',
-      firstName: 'James',
-      lastName: 'Miller',
-      email: 'james.miller@email.com',
-      phone: '+1-555-1009',
-      dateOfBirth: new Date('1968-12-03'),
-      gender: 'male',
-      address: {
-        street: '654 Maple Dr',
-        city: 'Phoenix',
-        state: 'AZ',
-        zipCode: '85001',
-        country: 'USA',
-      },
-      emergencyContact: {
-        name: 'Patricia Miller',
-        relationship: 'Wife',
-        phone: '+1-555-1010',
-      },
-      insurance: {
-        provider: 'Medicare',
-        policyNumber: 'MED123456789',
-        groupNumber: 'GRP005',
-      },
-      medicalHistory: [
-        {
-          condition: 'High Cholesterol',
-          diagnosedDate: new Date('2019-03-12'),
-          notes: 'Family history of heart disease',
-        },
-        {
-          condition: 'Arthritis',
-          diagnosedDate: new Date('2022-01-08'),
-          notes: 'Osteoarthritis in knees',
-        },
-      ],
-      allergies: [],
-      medications: [
-        {
-          name: 'Atorvastatin',
-          dosage: '20mg',
-          frequency: 'Once daily',
-          startDate: new Date('2019-03-12'),
-          prescribedBy: 'Dr. Johnson',
-        },
-      ],
-    },
-  ];
-
-  await Patient.deleteMany({});
-  const createdPatients = await Patient.insertMany(patients);
-  console.log(`✅ Created ${createdPatients.length} patients`);
-  return createdPatients;
-}
+// Removed seedPatients function
 
 async function seedDatabase() {
   try {
@@ -380,12 +102,12 @@ async function seedDatabase() {
     console.log('🚀 Starting database seeding...');
     
     const users = await seedUsers();
-    const patients = await seedPatients();
+    // Removed patients seeding
     
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📊 Summary:');
     console.log(`Users: ${users.length}`);
-    console.log(`Patients: ${patients.length}`);
+    // Removed patient count logging
     
     console.log('\n🔐 Test Login Credentials:');
     console.log('Admin: admin@healthcrm.com / admin123');

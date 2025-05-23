@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import connectDB from '@/lib/mongodb'
 import Customer from '@/models/Customer'
+import User from '@/models/User' // Added User model import
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,11 +121,12 @@ export async function GET(request: NextRequest) {
     // 获取客户数据和总数
     const [customers, totalCount] = await Promise.all([
       Customer.find(searchQuery)
-        .populate('salesRep', 'name')
+        .populate('salesRep', 'name email') // Added email to salesRep
+        .populate('user_id', 'name email role isActive') // Populate user info
         .sort(sortObj)
         .skip(skip)
         .limit(limit)
-        .select('-__v'),
+        .select('-__v'), // Exclude __v from Customer, populated fields will be included
       Customer.countDocuments(searchQuery)
     ])
 
@@ -175,15 +177,39 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // 验证必需字段
-    const { firstName, lastName, phone } = body
-    if (!firstName || !lastName || !phone) {
+    const { user_id, firstName, lastName, phone } = body // Added user_id to destructuring
+    if (!user_id || !firstName || !lastName || !phone) {
       return NextResponse.json(
-        { message: '姓名和电话都是必需的' },
+        { message: 'user_id, 姓名和电话都是必需的' }, // Updated message
         { status: 400 }
       )
     }
 
-    // 生成客户ID
+    // Verify User exists and has role 'customer'
+    const user = await User.findById(user_id)
+    if (!user) {
+      return NextResponse.json(
+        { message: '提供的user_id无效，用户不存在' },
+        { status: 404 } // Not Found
+      )
+    }
+    if (user.role !== 'customer') {
+      return NextResponse.json(
+        { message: '提供的用户不是客户角色' },
+        { status: 400 } // Bad Request
+      )
+    }
+
+    // Verify Customer profile doesn't already exist for this user_id
+    const existingCustomerProfile = await Customer.findOne({ user_id })
+    if (existingCustomerProfile) {
+      return NextResponse.json(
+        { message: '此用户已存在客户资料' },
+        { status: 409 } // Conflict
+      )
+    }
+
+    // 生成客户ID (existing logic, can be kept or modified)
     const lastCustomer = await Customer.findOne({}, {}, { sort: { 'createdAt': -1 } })
     let customerIdNumber = 1
     
@@ -196,27 +222,38 @@ export async function POST(request: NextRequest) {
 
     // 创建新客户
     const customer = new Customer({
+      user_id, // Store the provided user_id
       customerId,
       ...body,
     })
 
     await customer.save()
 
-    // 返回时填充销售代表信息
-    await customer.populate('salesRep', 'name')
+    // 返回时填充销售代表和用户信息
+    await customer.populate('salesRep', 'name email') // Added email to salesRep populate
+    await customer.populate('user_id', 'name email role') // Populate basic user info
 
     return NextResponse.json({
       message: '客户创建成功',
-      customer,
+      customer, // Customer now includes populated user_id details
     })
 
   } catch (error) {
     console.error('Create customer error:', error)
     
-    if (error.code === 11000) {
+    if (error.code === 11000) { // Duplicate key error
+      let message = '创建客户失败，存在重复键。';
+      if (error.keyPattern && error.keyPattern.user_id) {
+        message = '此用户已存在客户资料 (user_id 重复)';
+      } else if (error.keyPattern && error.keyPattern.customerId) {
+        message = '客户ID (customerId) 已存在';
+      } else if (error.keyPattern && error.keyPattern.email) {
+        // Assuming email might be unique in Customer model in future, though not specified now
+        message = '客户邮箱已存在';
+      }
       return NextResponse.json(
-        { message: '客户ID或邮箱已存在' },
-        { status: 400 }
+        { message },
+        { status: 409 } // Conflict is more appropriate for duplicate unique key
       )
     }
     

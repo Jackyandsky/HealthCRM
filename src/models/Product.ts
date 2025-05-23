@@ -10,30 +10,17 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  category: {
+  brand: { // Added brand field
     type: String,
-    enum: [
-      'vitamins', // 维生素
-      'minerals', // 矿物质
-      'antioxidants', // 抗氧化剂
-      'omega', // 欧米伽
-      'probiotics', // 益生菌
-      'protein', // 蛋白质
-      'weight_management', // 体重管理
-      'skincare', // 护肤品
-      'energy_metabolism', // 能量代谢
-      'immune_support', // 免疫支持
-      'heart_health', // 心脏健康
-      'bone_joint', // 骨骼关节
-      'digestive_health', // 消化健康
-      'brain_cognitive', // 大脑认知
-      'womens_health', // 女性健康
-      'mens_health', // 男性健康
-      'childrens_health', // 儿童健康
-    ],
+    default: 'USANA',
+  },
+  category_id: { // Renamed from category, changed type and added ref
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
     required: true,
   },
-  
+  images: [String], // Added images field for URLs
+
   // 产品详情
   description: String,
   ingredients: [String], // 成分列表
@@ -88,14 +75,24 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  tags: [{ // Added tags field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tag',
+  }],
+  created_by_admin_id: { // Added created_by_admin_id field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
 }, {
   timestamps: true,
 });
 
 // 添加索引
 productSchema.index({ productCode: 1 });
-productSchema.index({ category: 1 });
+productSchema.index({ category_id: 1 }); // Updated index for category_id
 productSchema.index({ stockStatus: 1 });
 productSchema.index({ popularity: -1 });
+productSchema.index({ tags: 1 }); // Added index for tags
+productSchema.index({ created_by_admin_id: 1 }); // Added index for created_by_admin_id
 
 export default mongoose.models.Product || mongoose.model('Product', productSchema);

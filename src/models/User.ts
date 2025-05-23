@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   employeeId: {
     type: String,
     unique: true,
+    sparse: true, // Added sparse for optional unique field
   },
   name: {
     type: String,
@@ -20,12 +21,38 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'sales_manager', 'sales_rep', 'customer_service', 'marketing'],
-    default: 'sales_rep',
+    enum: ['system_admin', 'admin', 'customer', 'sales_manager', 'sales_rep', 'customer_service', 'marketing'],
+    // Removed default to enforce explicit role assignment
   },
-  phone: String,
-  
-  // 销售相关信息
+  phone: String, // Retained
+
+  // New fields from description.txt
+  managing_admin_id: { // For customers, tracks their managing admin
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    sparse: true,
+  },
+  tags: [{ // Renamed from user_tags for consistency with description.txt
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tag', // Assuming a 'Tag' model will be created
+  }],
+  address: {
+    street: String,
+    city: String,
+    state_province: String,
+    postal_code: String,
+    country: String,
+  },
+  preferences: {
+    communication_prefs: {
+      email_notifications: { type: Boolean, default: true },
+      sms_notifications: { type: Boolean, default: false },
+    },
+    language: { type: String, default: 'en' },
+  },
+  other_info: mongoose.Schema.Types.Mixed,
+
+  // 销售相关信息 (Staff-specific, should be optional)
   salesInfo: {
     territory: String, // 销售区域
     teamLead: {
@@ -76,23 +103,35 @@ const userSchema = new mongoose.Schema({
     default: true,
   },
   lastLogin: Date,
+  // avatar: String, // This was already present and is retained
 }, {
-  timestamps: true,
+  timestamps: true, // Retained
 });
 
-// 生成员工ID
+// Modified pre-save hook for employeeId generation
 userSchema.pre('save', async function(next) {
-  if (!this.employeeId) {
-    const lastUser = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
+  // Only generate employeeId if the role is not 'customer' and employeeId is not already set
+  if (this.role !== 'customer' && !this.employeeId) {
+    // Simple sequential ID generation for non-customer roles
+    // For a more robust solution in a distributed environment, consider UUIDs or a dedicated sequence generator.
+    const lastUserWithEmployeeId = await this.constructor.findOne({ employeeId: { $exists: true, $ne: null } }, {}, { sort: { 'employeeId': -1 } });
     let employeeNumber = 1;
     
-    if (lastUser && lastUser.employeeId) {
-      const lastNumber = parseInt(lastUser.employeeId.replace('EMP', ''));
-      employeeNumber = lastNumber + 1;
+    if (lastUserWithEmployeeId && lastUserWithEmployeeId.employeeId) {
+      const match = lastUserWithEmployeeId.employeeId.match(/EMP(\d+)/);
+      if (match && match[1]) {
+        const lastNumber = parseInt(match[1]);
+        employeeNumber = lastNumber + 1;
+      }
     }
-    
     this.employeeId = `EMP${employeeNumber.toString().padStart(3, '0')}`;
   }
+  
+  // Ensure employeeId is not set for 'customer' role if it somehow got a value
+  // Or, if it's meant to be strictly null for customers, ensure it here.
+  // For now, we'll allow it to be null if the role is customer and it wasn't set.
+  // If a customer is changed to a non-customer role, the ID would be generated on next save if not present.
+
   next();
 });
 
