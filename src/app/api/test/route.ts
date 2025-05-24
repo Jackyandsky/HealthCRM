@@ -42,6 +42,6 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Test error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error }, { status: 500 })
   }
 }
