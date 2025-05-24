@@ -84,7 +84,13 @@ const userSchema = new mongoose.Schema({
 // 生成员工ID
 userSchema.pre('save', async function(next) {
   if (!this.employeeId) {
-    const lastUser = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
+    // const lastUser = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
+    const UserModel = mongoose.model('User'); // 直接通过名称获取模型
+
+    // 为 lastUser 提供类型，使其至少包含 employeeId 和 createdAt (如果用于排序)
+    const lastUser = await UserModel.findOne({}, {}, { sort: { 'createdAt': -1 } })
+        .lean() // 使用 .lean() 获取普通 JS 对象，可能更快且类型更容易处理
+        .exec() as { employeeId?: string; createdAt?: Date } | null; 
     let employeeNumber = 1;
     
     if (lastUser && lastUser.employeeId) {
