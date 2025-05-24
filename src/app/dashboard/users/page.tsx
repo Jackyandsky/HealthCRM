@@ -47,10 +47,8 @@ export default function UsersPage() {
 
   const tabs = [
     { id: 'all', name: '全部用户', count: 0 },
-    { id: 'admin', name: '管理员', count: 0 },
-    { id: 'doctor', name: '医生', count: 0 },
-    { id: 'nurse', name: '护士', count: 0 },
-    { id: 'receptionist', name: '前台', count: 0 },
+    { id: 'admins', name: '管理员', count: 0 },
+    { id: 'customer', name: '客户', count: 0 },
   ]
 
   useEffect(() => {
@@ -70,11 +68,18 @@ export default function UsersPage() {
         return
       }
 
+      let roleFilter = ''
+      if (activeTab === 'admins') {
+        roleFilter = 'system_admin,admin'
+      } else if (activeTab === 'customer') {
+        roleFilter = 'customer'
+      }
+
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
         search: searchTerm,
-        role: activeTab !== 'all' ? activeTab : '',
+        role: roleFilter,
         sortField,
         sortOrder,
         department: filterDepartment,
@@ -115,8 +120,8 @@ export default function UsersPage() {
     setCurrentPage(1)
   }
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('确定要删除此用户吗？此操作不可逆。')) {
+  const handleDeleteUser = async (userId: string, userRole: string) => {
+    if (!confirm('确定要停用此用户吗？停用后用户将无法登录系统。')) {
       return
     }
 
@@ -131,12 +136,14 @@ export default function UsersPage() {
 
       if (response.ok) {
         loadUsers()
+        alert('用户已成功停用')
       } else {
-        alert('删除失败，请重试')
+        const data = await response.json()
+        alert(data.message || '停用失败，请重试')
       }
     } catch (error) {
       console.error('Error deleting user:', error)
-      alert('删除时发生错误')
+      alert('停用时发生错误')
     }
   }
 
@@ -146,32 +153,36 @@ export default function UsersPage() {
 
   const getRoleColor = (role: string) => {
     const colors = {
-      admin: 'bg-red-100 text-red-800',
-      doctor: 'bg-blue-100 text-blue-800',
-      nurse: 'bg-green-100 text-green-800',
-      receptionist: 'bg-yellow-100 text-yellow-800',
+      system_admin: 'bg-red-100 text-red-800',
+      admin: 'bg-blue-100 text-blue-800',
+      customer: 'bg-green-100 text-green-800',
     }
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
   const getRoleName = (role: string) => {
     const names = {
+      system_admin: '系统管理员',
       admin: '管理员',
-      doctor: '医生',
-      nurse: '护士',
-      receptionist: '前台',
+      customer: '客户',
     }
     return names[role as keyof typeof names] || role
   }
 
   const canEditUser = (user: User) => {
     if (!currentUser) return false
-    return currentUser.role === 'admin'
+    // 系统管理员可以编辑所有用户，管理员只能编辑客户
+    if (currentUser.role === 'system_admin') return true
+    if (currentUser.role === 'admin' && user.role === 'customer') return true
+    return false
   }
 
   const canDeleteUser = (user: User) => {
     if (!currentUser) return false
-    return currentUser.role === 'admin' && user.role !== 'admin'
+    // 系统管理员可以删除非系统管理员的用户，管理员只能删除客户
+    if (currentUser.role === 'system_admin' && user.role !== 'system_admin') return true
+    if (currentUser.role === 'admin' && user.role === 'customer') return true
+    return false
   }
 
   const departments = [...new Set(users.map(user => user.department).filter(Boolean))]
@@ -202,7 +213,7 @@ export default function UsersPage() {
                 <p className="text-sm text-gray-500">管理系统用户和权限</p>
               </div>
             </div>
-            {currentUser?.role === 'admin' && (
+            {currentUser?.role === 'system_admin' && (
               <Link
                 href="/dashboard/users/new"
                 className="btn btn-primary flex items-center space-x-2"
@@ -402,9 +413,9 @@ export default function UsersPage() {
                               )}
                               {canDeleteUser(user) && (
                                 <button
-                                  onClick={() => handleDeleteUser(user._id)}
+                                  onClick={() => handleDeleteUser(user._id, user.role)}
                                   className="text-red-600 hover:text-red-900"
-                                  title="删除"
+                                  title="停用用户"
                                 >
                                   <TrashIcon className="h-5 w-5" />
                                 </button>

@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   UserGroupIcon,
-  CalendarIcon,
-  DocumentTextIcon,
+  ShoppingBagIcon,
+  ClipboardDocumentListIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
   BellIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   UsersIcon,
+  HeartIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline'
 
 interface User {
@@ -24,18 +26,18 @@ interface User {
 }
 
 interface DashboardStats {
-  totalPatients: number
-  todayAppointments: number
-  pendingBills: number
+  totalCustomers: number
+  newCustomers: number
+  pendingFollowUps: number
   totalRevenue: number
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [stats, setStats] = useState<DashboardStats>({
-    totalPatients: 0,
-    todayAppointments: 0,
-    pendingBills: 0,
+    totalCustomers: 0,
+    newCustomers: 0,
+    pendingFollowUps: 0,
     totalRevenue: 0,
   })
   const [loading, setLoading] = useState(true)
@@ -97,53 +99,60 @@ export default function DashboardPage() {
 
   const menuItems = [
     {
-      name: '患者管理',
-      href: '/dashboard/patients',
+      name: '客户管理',
+      href: '/dashboard/customers',
       icon: UserGroupIcon,
-      description: '管理患者信息和档案',
-      roles: ['admin', 'doctor', 'nurse', 'receptionist'],
+      description: '管理客户信息和健康档案',
+      roles: ['system_admin', 'admin'],
+    },
+    {
+      name: '商品管理',
+      href: '/dashboard/products',
+      icon: ShoppingBagIcon,
+      description: 'USANA产品管理',
+      roles: ['system_admin', 'admin'],
+    },
+    {
+      name: '服用计划',
+      href: '/dashboard/plans',
+      icon: HeartIcon,
+      description: '健康计划模板管理',
+      roles: ['system_admin', 'admin'],
+    },
+    {
+      name: '购买记录',
+      href: '/dashboard/purchases',
+      icon: CurrencyDollarIcon,
+      description: '客户购买记录管理',
+      roles: ['system_admin', 'admin'],
+    },
+    {
+      name: '回访记录',
+      href: '/dashboard/follow-ups',
+      icon: ChatBubbleLeftRightIcon,
+      description: '客户回访和反馈管理',
+      roles: ['system_admin', 'admin'],
     },
     {
       name: '用户管理',
       href: '/dashboard/users',
       icon: UsersIcon,
       description: '管理系统用户和权限',
-      roles: ['admin'],
-    },
-    {
-      name: '预约管理',
-      href: '/dashboard/appointments',
-      icon: CalendarIcon,
-      description: '预约调度和管理',
-      roles: ['admin', 'doctor', 'nurse', 'receptionist'],
-    },
-    {
-      name: '医疗记录',
-      href: '/dashboard/medical-records',
-      icon: DocumentTextIcon,
-      description: '电子病历管理',
-      roles: ['admin', 'doctor', 'nurse'],
-    },
-    {
-      name: '账单管理',
-      href: '/dashboard/billing',
-      icon: CurrencyDollarIcon,
-      description: '财务和账单',
-      roles: ['admin', 'receptionist'],
+      roles: ['system_admin'],
     },
     {
       name: '数据分析',
       href: '/dashboard/analytics',
       icon: ChartBarIcon,
-      description: '报表和统计',
-      roles: ['admin', 'doctor'],
+      description: '销售报表和统计',
+      roles: ['system_admin', 'admin'],
     },
     {
       name: '系统设置',
       href: '/dashboard/settings',
       icon: Cog6ToothIcon,
       description: '系统配置',
-      roles: ['admin'],
+      roles: ['system_admin'],
     },
   ]
 
@@ -207,10 +216,10 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        总患者数
+                        总客户数
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats.totalPatients}
+                        {stats.totalCustomers}
                       </dd>
                     </dl>
                   </div>
@@ -222,15 +231,15 @@ export default function DashboardPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <CalendarIcon className="h-6 w-6 text-gray-400" />
+                    <UserGroupIcon className="h-6 w-6 text-green-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        今日预约
+                        新增客户
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats.todayAppointments}
+                        {stats.newCustomers}
                       </dd>
                     </dl>
                   </div>
@@ -242,15 +251,15 @@ export default function DashboardPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
+                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-yellow-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        待处理账单
+                        待回访客户
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {stats.pendingBills}
+                        {stats.pendingFollowUps}
                       </dd>
                     </dl>
                   </div>
@@ -267,7 +276,7 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        月收入
+                        月销售额
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         ¥{stats.totalRevenue.toLocaleString()}
@@ -313,18 +322,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Stats for Urgent Items */}
-          {user?.role === 'admin' && (
+          {(user?.role === 'system_admin' || user?.role === 'admin') && (
             <div className="mt-8 bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">需要关注的事项</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <CalendarIcon className="h-5 w-5 text-red-400" />
+                      <ChatBubbleLeftRightIcon className="h-5 w-5 text-red-400" />
                     </div>
                     <div className="ml-3">
                       <p className="text-sm font-medium text-red-800">需要回访</p>
-                      <p className="text-sm text-red-600">3 位患者</p>
+                      <p className="text-sm text-red-600">5 位客户</p>
                     </div>
                   </div>
                 </div>
@@ -332,11 +341,11 @@ export default function DashboardPage() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <DocumentTextIcon className="h-5 w-5 text-yellow-400" />
+                      <HeartIcon className="h-5 w-5 text-yellow-400" />
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-yellow-800">药物不足</p>
-                      <p className="text-sm text-yellow-600">2 位患者</p>
+                      <p className="text-sm font-medium text-yellow-800">产品余量不足</p>
+                      <p className="text-sm text-yellow-600">3 位客户</p>
                     </div>
                   </div>
                 </div>
@@ -347,8 +356,8 @@ export default function DashboardPage() {
                       <UserGroupIcon className="h-5 w-5 text-orange-400" />
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-orange-800">紧急处理</p>
-                      <p className="text-sm text-orange-600">1 位患者</p>
+                      <p className="text-sm font-medium text-orange-800">高价值客户</p>
+                      <p className="text-sm text-orange-600">2 位客户</p>
                     </div>
                   </div>
                 </div>

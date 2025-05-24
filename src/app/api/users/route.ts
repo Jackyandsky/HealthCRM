@@ -51,7 +51,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (role) {
-      searchQuery.role = role
+      // Handle multiple roles separated by comma
+      if (role.includes(',')) {
+        const roles = role.split(',').map(r => r.trim())
+        searchQuery.role = { $in: roles }
+      } else {
+        searchQuery.role = role
+      }
     }
 
     if (department) {

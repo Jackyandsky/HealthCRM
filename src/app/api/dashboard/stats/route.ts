@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import connectDB from '@/lib/mongodb'
-import Patient from '@/models/Patient'
-import Appointment from '@/models/Appointment'
-import Billing from '@/models/Billing'
+import Customer from '@/models/Customer'
+import User from '@/models/User'
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,24 +28,34 @@ export async function GET(request: NextRequest) {
 
     await connectDB()
 
-    // Get current date for today's appointments
+    // Get current date for statistics
     const today = new Date()
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
-
-    // Get current month for revenue calculation
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
 
-    // Get basic stats (since we don't have appointments and billing collections populated yet)
-    const totalPatients = await Patient.countDocuments({ isActive: true })
+    // Get customer statistics
+    const totalCustomers = await Customer.countDocuments({ isActive: true })
+    
+    // Get new customers this month
+    const newCustomers = await Customer.countDocuments({
+      isActive: true,
+      createdAt: { $gte: startOfMonth, $lt: endOfMonth }
+    })
 
-    // Return mock data for now since we haven't created appointments and billing yet
+    // Get customers needing follow-up
+    const pendingFollowUps = await Customer.countDocuments({
+      isActive: true,
+      'followUp.nextContactDate': { $lte: today }
+    })
+
+    // Mock revenue data for now
+    const totalRevenue = 58420.50
+
     return NextResponse.json({
-      totalPatients,
-      todayAppointments: 3, // Mock data
-      pendingBills: 5, // Mock data
-      totalRevenue: 15420.50, // Mock data
+      totalCustomers,
+      newCustomers,
+      pendingFollowUps,
+      totalRevenue,
     })
 
   } catch (error) {

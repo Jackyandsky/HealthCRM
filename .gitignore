@@ -118,3 +118,5 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+process.txt
+package-lock.json

@@ -28,106 +28,92 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-// Patient Schema
-const patientSchema = new mongoose.Schema({
-  patientId: String,
+// Customer Schema
+const customerSchema = new mongoose.Schema({
+  customerId: String,
   firstName: String,
   lastName: String,
   email: String,
   phone: String,
   dateOfBirth: Date,
   gender: String,
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String,
+  customerType: {
+    type: String,
+    enum: ['potential', 'new', 'regular', 'vip', 'inactive'],
+    default: 'potential',
   },
-  emergencyContact: {
-    name: String,
-    relationship: String,
-    phone: String,
+  salesRep: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
-  insurance: {
-    provider: String,
-    policyNumber: String,
-    groupNumber: String,
+  followUp: {
+    nextContactDate: Date,
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'urgent'],
+      default: 'medium',
+    },
+    lastContactDate: Date,
   },
-  medicalHistory: [{
-    condition: String,
-    diagnosedDate: Date,
-    notes: String,
+  productUsage: [{
+    productName: String,
+    effectiveness: Number,
+    willContinue: Boolean,
   }],
-  allergies: [{
-    allergen: String,
-    severity: String,
-    notes: String,
-  }],
-  medications: [{
-    name: String,
-    dosage: String,
-    frequency: String,
-    startDate: Date,
-    prescribedBy: String,
-  }],
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'blocked'],
+    default: 'active',
+  },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
-const Patient = mongoose.models.Patient || mongoose.model('Patient', patientSchema);
+const Customer = mongoose.models.Customer || mongoose.model('Customer', customerSchema);
 
 async function seedUsers() {
   console.log('🌱 Seeding users...');
   
   const users = [
     {
-      name: 'Dr. Sarah Johnson',
-      email: 'dr.johnson@healthcrm.com',
-      password: await bcrypt.hash('doctor123', 12),
-      role: 'doctor',
-      phone: '+1-555-0101',
-      department: 'Cardiology',
+      name: 'System Admin',
+      email: 'sysadmin@healthcrm.com',
+      password: await bcrypt.hash('admin123', 12),
+      role: 'system_admin',
+      phone: '+86-138-0000-0001',
+      department: 'IT',
     },
     {
-      name: 'Dr. Michael Chen',
-      email: 'dr.chen@healthcrm.com',
-      password: await bcrypt.hash('doctor123', 12),
-      role: 'doctor',
-      phone: '+1-555-0102',
-      department: 'Neurology',
-    },
-    {
-      name: 'Dr. Emily Rodriguez',
-      email: 'dr.rodriguez@healthcrm.com',
-      password: await bcrypt.hash('doctor123', 12),
-      role: 'doctor',
-      phone: '+1-555-0103',
-      department: 'Pediatrics',
-    },
-    {
-      name: 'Nurse Lisa Wong',
-      email: 'nurse.wong@healthcrm.com',
-      password: await bcrypt.hash('nurse123', 12),
-      role: 'nurse',
-      phone: '+1-555-0201',
-      department: 'Emergency',
-    },
-    {
-      name: 'Admin Alice Smith',
-      email: 'admin@healthcrm.com',
+      name: 'Sales Manager Zhang',
+      email: 'manager.zhang@healthcrm.com',
       password: await bcrypt.hash('admin123', 12),
       role: 'admin',
-      phone: '+1-555-0001',
-      department: 'Administration',
+      phone: '+86-138-0000-0101',
+      department: 'Sales',
     },
     {
-      name: 'Receptionist Mary Davis',
-      email: 'receptionist@healthcrm.com',
-      password: await bcrypt.hash('reception123', 12),
-      role: 'receptionist',
-      phone: '+1-555-0301',
-      department: 'Front Desk',
+      name: 'Sales Rep Li',
+      email: 'sales.li@healthcrm.com',
+      password: await bcrypt.hash('admin123', 12),
+      role: 'admin',
+      phone: '+86-138-0000-0102',
+      department: 'Sales',
+    },
+    {
+      name: 'Customer Wang Ming',
+      email: 'wang.ming@customer.com',
+      password: await bcrypt.hash('customer123', 12),
+      role: 'customer',
+      phone: '+86-138-0000-1001',
+      department: '',
+    },
+    {
+      name: 'Customer Liu Fang',
+      email: 'liu.fang@customer.com',
+      password: await bcrypt.hash('customer123', 12),
+      role: 'customer',
+      phone: '+86-138-0000-1002',
+      department: '',
     },
   ];
 
@@ -137,240 +123,138 @@ async function seedUsers() {
   return createdUsers;
 }
 
-async function seedPatients() {
-  console.log('🌱 Seeding patients...');
+async function seedCustomers() {
+  console.log('🌱 Seeding customers...');
   
-  const patients = [
+  // Get admin users for sales rep assignment
+  const admins = await User.find({ role: { $in: ['admin', 'system_admin'] } });
+  
+  const customers = [
     {
-      patientId: 'P001',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@email.com',
-      phone: '+1-555-1001',
+      customerId: 'C0001',
+      firstName: '小明',
+      lastName: '王',
+      email: 'xiaoming.wang@email.com',
+      phone: '+86-138-1001-0001',
       dateOfBirth: new Date('1985-03-15'),
       gender: 'male',
-      address: {
-        street: '123 Main St',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        country: 'USA',
+      customerType: 'vip',
+      salesRep: admins[0]?._id,
+      followUp: {
+        nextContactDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        priority: 'high',
+        lastContactDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
       },
-      emergencyContact: {
-        name: 'Jane Doe',
-        relationship: 'Wife',
-        phone: '+1-555-1002',
-      },
-      insurance: {
-        provider: 'Blue Cross Blue Shield',
-        policyNumber: 'BC123456789',
-        groupNumber: 'GRP001',
-      },
-      medicalHistory: [
+      productUsage: [
         {
-          condition: 'Hypertension',
-          diagnosedDate: new Date('2020-01-15'),
-          notes: 'Well controlled with medication',
+          productName: 'USANA CellSentials',
+          effectiveness: 4,
+          willContinue: true,
         },
       ],
-      allergies: [
-        {
-          allergen: 'Penicillin',
-          severity: 'moderate',
-          notes: 'Causes rash',
-        },
-      ],
-      medications: [
-        {
-          name: 'Lisinopril',
-          dosage: '10mg',
-          frequency: 'Once daily',
-          startDate: new Date('2020-01-15'),
-          prescribedBy: 'Dr. Johnson',
-        },
-      ],
+      status: 'active',
     },
     {
-      patientId: 'P002',
-      firstName: 'Maria',
-      lastName: 'Garcia',
-      email: 'maria.garcia@email.com',
-      phone: '+1-555-1003',
+      customerId: 'C0002',
+      firstName: '小红',
+      lastName: '李',
+      email: 'xiaohong.li@email.com',
+      phone: '+86-138-1002-0002',
       dateOfBirth: new Date('1992-07-22'),
       gender: 'female',
-      address: {
-        street: '456 Oak Ave',
-        city: 'Los Angeles',
-        state: 'CA',
-        zipCode: '90210',
-        country: 'USA',
+      customerType: 'regular',
+      salesRep: admins[1]?._id || admins[0]?._id,
+      followUp: {
+        nextContactDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        priority: 'medium',
+        lastContactDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
       },
-      emergencyContact: {
-        name: 'Carlos Garcia',
-        relationship: 'Husband',
-        phone: '+1-555-1004',
-      },
-      insurance: {
-        provider: 'Aetna',
-        policyNumber: 'AET987654321',
-        groupNumber: 'GRP002',
-      },
-      medicalHistory: [
+      productUsage: [
         {
-          condition: 'Diabetes Type 2',
-          diagnosedDate: new Date('2021-06-10'),
-          notes: 'Managing with diet and medication',
+          productName: 'USANA Probiotics',
+          effectiveness: 3,
+          willContinue: true,
         },
       ],
-      allergies: [],
-      medications: [
-        {
-          name: 'Metformin',
-          dosage: '500mg',
-          frequency: 'Twice daily',
-          startDate: new Date('2021-06-10'),
-          prescribedBy: 'Dr. Chen',
-        },
-      ],
+      status: 'active',
     },
     {
-      patientId: 'P003',
-      firstName: 'Robert',
-      lastName: 'Johnson',
-      email: 'robert.johnson@email.com',
-      phone: '+1-555-1005',
+      customerId: 'C0003',
+      firstName: '建国',
+      lastName: '张',
+      email: 'jianguo.zhang@email.com',
+      phone: '+86-138-1003-0003',
       dateOfBirth: new Date('1975-11-08'),
       gender: 'male',
-      address: {
-        street: '789 Pine St',
-        city: 'Chicago',
-        state: 'IL',
-        zipCode: '60601',
-        country: 'USA',
+      customerType: 'new',
+      salesRep: admins[0]?._id,
+      followUp: {
+        nextContactDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago (overdue)
+        priority: 'urgent',
+        lastContactDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), // 21 days ago
       },
-      emergencyContact: {
-        name: 'Susan Johnson',
-        relationship: 'Sister',
-        phone: '+1-555-1006',
-      },
-      insurance: {
-        provider: 'Cigna',
-        policyNumber: 'CIG456789123',
-        groupNumber: 'GRP003',
-      },
-      medicalHistory: [],
-      allergies: [
+      productUsage: [
         {
-          allergen: 'Shellfish',
-          severity: 'severe',
-          notes: 'Anaphylactic reaction',
+          productName: 'USANA BiOmega',
+          effectiveness: 2, // Low effectiveness
+          willContinue: false,
         },
       ],
-      medications: [],
+      status: 'active',
     },
     {
-      patientId: 'P004',
-      firstName: 'Emily',
-      lastName: 'Wilson',
-      email: 'emily.wilson@email.com',
-      phone: '+1-555-1007',
-      dateOfBirth: new Date('2010-04-12'),
+      customerId: 'C0004',
+      firstName: '美丽',
+      lastName: '陈',
+      email: 'meili.chen@email.com',
+      phone: '+86-138-1004-0004',
+      dateOfBirth: new Date('2000-04-12'),
       gender: 'female',
-      address: {
-        street: '321 Elm St',
-        city: 'Houston',
-        state: 'TX',
-        zipCode: '77001',
-        country: 'USA',
+      customerType: 'potential',
+      salesRep: admins[1]?._id || admins[0]?._id,
+      followUp: {
+        nextContactDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        priority: 'low',
+        lastContactDate: null,
       },
-      emergencyContact: {
-        name: 'Jennifer Wilson',
-        relationship: 'Mother',
-        phone: '+1-555-1008',
-      },
-      insurance: {
-        provider: 'United Healthcare',
-        policyNumber: 'UHC789123456',
-        groupNumber: 'GRP004',
-      },
-      medicalHistory: [
-        {
-          condition: 'Asthma',
-          diagnosedDate: new Date('2015-09-20'),
-          notes: 'Exercise-induced asthma',
-        },
-      ],
-      allergies: [
-        {
-          allergen: 'Dust mites',
-          severity: 'mild',
-          notes: 'Causes sneezing and congestion',
-        },
-      ],
-      medications: [
-        {
-          name: 'Albuterol inhaler',
-          dosage: '90mcg',
-          frequency: 'As needed',
-          startDate: new Date('2015-09-20'),
-          prescribedBy: 'Dr. Rodriguez',
-        },
-      ],
+      productUsage: [],
+      status: 'active',
     },
     {
-      patientId: 'P005',
-      firstName: 'James',
-      lastName: 'Miller',
-      email: 'james.miller@email.com',
-      phone: '+1-555-1009',
+      customerId: 'C0005',
+      firstName: '勇',
+      lastName: '刘',
+      email: 'yong.liu@email.com',
+      phone: '+86-138-1005-0005',
       dateOfBirth: new Date('1968-12-03'),
       gender: 'male',
-      address: {
-        street: '654 Maple Dr',
-        city: 'Phoenix',
-        state: 'AZ',
-        zipCode: '85001',
-        country: 'USA',
+      customerType: 'regular',
+      salesRep: admins[0]?._id,
+      followUp: {
+        nextContactDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+        priority: 'medium',
+        lastContactDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
       },
-      emergencyContact: {
-        name: 'Patricia Miller',
-        relationship: 'Wife',
-        phone: '+1-555-1010',
-      },
-      insurance: {
-        provider: 'Medicare',
-        policyNumber: 'MED123456789',
-        groupNumber: 'GRP005',
-      },
-      medicalHistory: [
+      productUsage: [
         {
-          condition: 'High Cholesterol',
-          diagnosedDate: new Date('2019-03-12'),
-          notes: 'Family history of heart disease',
+          productName: 'USANA MagneCal D',
+          effectiveness: 5,
+          willContinue: true,
         },
         {
-          condition: 'Arthritis',
-          diagnosedDate: new Date('2022-01-08'),
-          notes: 'Osteoarthritis in knees',
+          productName: 'USANA Vita Antioxidant',
+          effectiveness: 1, // Very low effectiveness
+          willContinue: false,
         },
       ],
-      allergies: [],
-      medications: [
-        {
-          name: 'Atorvastatin',
-          dosage: '20mg',
-          frequency: 'Once daily',
-          startDate: new Date('2019-03-12'),
-          prescribedBy: 'Dr. Johnson',
-        },
-      ],
+      status: 'active',
     },
   ];
 
-  await Patient.deleteMany({});
-  const createdPatients = await Patient.insertMany(patients);
-  console.log(`✅ Created ${createdPatients.length} patients`);
-  return createdPatients;
+  await Customer.deleteMany({});
+  const createdCustomers = await Customer.insertMany(customers);
+  console.log(`✅ Created ${createdCustomers.length} customers`);
+  return createdCustomers;
 }
 
 async function seedDatabase() {
@@ -380,18 +264,18 @@ async function seedDatabase() {
     console.log('🚀 Starting database seeding...');
     
     const users = await seedUsers();
-    const patients = await seedPatients();
+    const customers = await seedCustomers();
     
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📊 Summary:');
     console.log(`Users: ${users.length}`);
-    console.log(`Patients: ${patients.length}`);
+    console.log(`Customers: ${customers.length}`);
     
     console.log('\n🔐 Test Login Credentials:');
-    console.log('Admin: admin@healthcrm.com / admin123');
-    console.log('Doctor: dr.johnson@healthcrm.com / doctor123');
-    console.log('Nurse: nurse.wong@healthcrm.com / nurse123');
-    console.log('Receptionist: receptionist@healthcrm.com / reception123');
+    console.log('System Admin: sysadmin@healthcrm.com / admin123');
+    console.log('Sales Manager: manager.zhang@healthcrm.com / admin123');
+    console.log('Sales Rep: sales.li@healthcrm.com / admin123');
+    console.log('Customer: wang.ming@customer.com / customer123');
     
   } catch (error) {
     console.error('❌ Error seeding database:', error);

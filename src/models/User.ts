@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   employeeId: {
     type: String,
     unique: true,
+    sparse: true,
   },
   name: {
     type: String,
@@ -20,8 +21,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'sales_manager', 'sales_rep', 'customer_service', 'marketing'],
-    default: 'sales_rep',
+    enum: ['system_admin', 'admin', 'customer'],
+    default: 'customer',
   },
   phone: String,
   
