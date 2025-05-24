@@ -110,13 +110,33 @@ export async function PUT(
   } catch (error) {
     console.error('Update customer error:', error)
     
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { message: '邮箱已被其他客户使用' },
-        { status: 400 }
-      )
+    // if (error.code === 11000) {
+    //   return NextResponse.json(
+    //     { message: '邮箱已被其他客户使用' },
+    //     { status: 400 }
+    //   )
+    // }
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      // 3. 类型断言，以便访问 code 和可能存在的 keyValue
+      const mongoError = error as { code: unknown; keyValue?: Record<string, unknown> }; 
+  
+      if (mongoError.code === 11000) {
+        // 检查是哪个字段导致了重复键错误 (通常是 email)
+        let conflictingFieldMessage = '提供的一个或多个唯一字段已被使用。';
+        if (mongoError.keyValue && mongoError.keyValue.email) {
+          conflictingFieldMessage = '邮箱已被其他客户使用。';
+        } else if (mongoError.keyValue && mongoError.keyValue.customerId) {
+          conflictingFieldMessage = '客户ID已被其他客户使用。';
+        }
+        // 等等，可以为其他唯一键添加特定消息
+  
+        return NextResponse.json(
+          { message: conflictingFieldMessage },
+          // 409 Conflict 更适合表示由于与当前资源状态冲突而无法完成请求 (例如唯一键冲突)
+          { status: 409 } 
+        );
+      }
     }
-    
     return NextResponse.json(
       { message: '服务器错误，请稍后重试' },
       { status: 500 }
