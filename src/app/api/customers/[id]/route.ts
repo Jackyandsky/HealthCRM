@@ -110,12 +110,6 @@ export async function PUT(
   } catch (error) {
     console.error('Update customer error:', error)
     
-    // if (error.code === 11000) {
-    //   return NextResponse.json(
-    //     { message: '邮箱已被其他客户使用' },
-    //     { status: 400 }
-    //   )
-    // }
     if (typeof error === 'object' && error !== null && 'code' in error) {
       // 3. 类型断言，以便访问 code 和可能存在的 keyValue
       const mongoError = error as { code: unknown; keyValue?: Record<string, unknown> }; 

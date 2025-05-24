@@ -148,11 +148,15 @@ export async function PUT(
   } catch (error) {
     console.error('Update user error:', error)
     
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { message: '邮箱已被其他用户使用' },
-        { status: 400 }
-      )
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      const mongoError = error as { code: unknown; keyValue?: Record<string, unknown> };
+      if (mongoError.code === 11000) {
+        const conflictingField = mongoError.keyValue ? Object.keys(mongoError.keyValue).join(', ') : '字段';
+        return NextResponse.json(
+          { message: `创建失败：${conflictingField}已存在。` },
+          { status: 409 } // 409 Conflict is more appropriate for duplicate data
+        );
+      }
     }
     
     return NextResponse.json(

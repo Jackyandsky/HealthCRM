@@ -213,12 +213,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Create customer error:', error)
     
-    // if (error.code === 11000) {
-    //   return NextResponse.json(
-    //     { message: '客户ID或邮箱已存在' },
-    //     { status: 400 }
-    //   )
-    // }
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const mongoError = error as { code: unknown; keyValue?: Record<string, unknown> };
       if (mongoError.code === 11000) {
