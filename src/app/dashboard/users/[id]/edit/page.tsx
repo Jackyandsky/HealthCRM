@@ -216,13 +216,23 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       }
 
       // Remove confirmPassword from submission
-      delete submissionData.confirmPassword
+      // delete submissionData.confirmPassword
 
       // Only include password if it's provided
-      if (!submissionData.password) {
-        delete submissionData.password
-      }
+      // if (!submissionData.password) {
+      //   delete submissionData.password
+      // }
+      const { 
+        confirmPassword, // 这个字段将被移除
+        password: newPasswordValue, // 从 submissionData 中获取 password 字段值
+        ...essentialData // 其余所有字段
+      } = submissionData;
 
+      const finalPayloadToSend: { [key: string]: any } = { ...essentialData };
+
+      if (newPasswordValue && newPasswordValue.trim() !== '') { // 仅当用户提供了新密码时才包含
+        finalPayloadToSend.password = newPasswordValue;
+      }
       const response = await fetch(`/api/users/${params.id}`, {
         method: 'PUT',
         headers: {
