@@ -185,7 +185,8 @@ export default function UsersPage() {
     return false
   }
 
-  const departments = [...new Set(users.map(user => user.department).filter(Boolean))]
+  // const departments = [...new Set(users.map(user => user.department).filter(Boolean))]
+  const departments = Array.from(new Set(users.map(user => user.department).filter(userDepartment => !!userDepartment)));
 
   if (loading) {
     return (
