@@ -10,25 +10,82 @@ export async function GET(
   try {
     const decoded = verifyToken(request)
     
-    if (!decoded || !['system_admin', 'admin'].includes(decoded.role)) {
+    if (!decoded) {
       return NextResponse.json(
-        { message: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { message: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
     await connectDB()
     
-    const healthPlan = await HealthPlan.findById(params.id)
-      .populate('customerId', 'name email phone category address healthProfile')
-      .populate('assignedToId', 'name email department employeeId')
-      .populate('createdById', 'name email department')
-      .populate('productRecommendations.productId', 'productCode productName category benefits healthConcerns retailPrice wholesalePrice preferredCustomerPrice')
-      .populate('templateId', 'name category description')
-      .populate('feedback.providedBy', 'name email')
-      .populate('adjustments.changedBy', 'name email')
-      .populate('adjustments.approvedBy', 'name email')
-      .lean()
+    // First, get the document without product populate to check its structure
+    const healthPlanRaw = await HealthPlan.findById(params.id).lean()
+    
+    if (!healthPlanRaw) {
+      return NextResponse.json(
+        { message: 'Health plan not found' },
+        { status: 404 }
+      )
+    }
+    
+    console.log('Raw health plan structure:', Object.keys(healthPlanRaw))
+    console.log('Products field content:', (healthPlanRaw as any).products)
+    console.log('ProductRecommendations field content:', (healthPlanRaw as any).productRecommendations)
+    
+    // Now populate based on what fields exist - skip automatic populate and go straight to manual
+    let healthPlan
+    if ((healthPlanRaw as any).products) {
+      console.log('Using new schema (products field found) - doing manual population')
+      healthPlan = await HealthPlan.findById(params.id)
+        .populate('customerId', 'firstName lastName email phone customerType')
+        .lean()
+      
+      // Always do manual population for products since populate isn't working
+      if ((healthPlan as any).products && (healthPlan as any).products.length > 0) {
+        console.log('Starting manual population for', (healthPlan as any).products.length, 'products')
+        const Product = (await import('@/models/Product')).default
+        for (let i = 0; i < (healthPlan as any).products.length; i++) {
+          if ((healthPlan as any).products[i].productId) {
+            try {
+              console.log('Looking up product:', (healthPlan as any).products[i].productId)
+              const product = await Product.findById((healthPlan as any).products[i].productId).select('productCode productName category retailPrice wholesalePrice preferredCustomerPrice').lean()
+              if (product) {
+                console.log('Found product:', product)
+                ;(healthPlan as any).products[i].productId = product
+              } else {
+                console.log('Product not found for ID:', (healthPlan as any).products[i].productId)
+              }
+            } catch (productError: any) {
+              console.log('Failed to populate product:', (healthPlan as any).products[i].productId, productError.message)
+            }
+          }
+        }
+        console.log('Manual population complete')
+      }
+    } else if ((healthPlanRaw as any).productRecommendations) {
+      console.log('Using old schema (productRecommendations field found)')
+      try {
+        healthPlan = await HealthPlan.findById(params.id)
+          .populate('customerId', 'firstName lastName email phone customerType')
+          .populate({
+            path: 'productRecommendations.productId',
+            select: 'productCode productName category retailPrice wholesalePrice preferredCustomerPrice',
+            strictPopulate: false
+          })
+          .lean()
+      } catch (populateError: any) {
+        console.log('Populate failed, falling back to basic query:', populateError.message)
+        healthPlan = await HealthPlan.findById(params.id)
+          .populate('customerId', 'firstName lastName email phone customerType')
+          .lean()
+      }
+    } else {
+      console.log('No product fields found, using basic populate')
+      healthPlan = await HealthPlan.findById(params.id)
+        .populate('customerId', 'firstName lastName email phone customerType')
+        .lean()
+    }
     
     if (!healthPlan) {
       return NextResponse.json(
@@ -37,27 +94,17 @@ export async function GET(
       )
     }
 
-    // Calculate real-time progress
-    const healthGoals = (healthPlan as any).healthGoals || []
-    const activeGoals = healthGoals.filter((goal: any) => goal.status === 'active')
-    const completedGoals = healthGoals.filter((goal: any) => goal.status === 'achieved')
+    console.log('Final populated health plan:', JSON.stringify(healthPlan, null, 2))
     
-    const progress = (healthPlan as any).progress || {}
-    const calculatedProgress = {
-      ...progress,
-      overallProgress: activeGoals.length > 0 
-        ? Math.round(activeGoals.reduce((sum: number, goal: any) => sum + (goal.progress?.percentage || 0), 0) / activeGoals.length)
-        : progress.overallProgress || 0,
-      goalsAchieved: completedGoals.length,
-      totalGoals: healthGoals.length
+    // Return simplified health plan data
+    const responseData = {
+      ...healthPlan,
+      tags: (healthPlan as any).tags || []
     }
 
     return NextResponse.json({
       message: 'Health plan retrieved successfully',
-      data: {
-        ...healthPlan,
-        progress: calculatedProgress
-      }
+      data: responseData
     })
   } catch (error) {
     console.error('Error fetching health plan:', error)
@@ -75,10 +122,10 @@ export async function PUT(
   try {
     const decoded = verifyToken(request)
     
-    if (!decoded || !['system_admin', 'admin'].includes(decoded.role)) {
+    if (!decoded) {
       return NextResponse.json(
-        { message: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { message: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
@@ -95,12 +142,9 @@ export async function PUT(
       )
     }
 
-    // Update allowed fields
+    // Update allowed fields for simplified model
     const allowedFields = [
-      'title', 'description', 'priority', 'status', 'planType',
-      'healthAssessment', 'healthGoals', 'productRecommendations',
-      'timeline', 'schedule', 'costAnalysis', 'progress',
-      'notes', 'tags', 'assignedToId', 'assignedToName'
+      'title', 'description', 'tags', 'products'
     ]
 
     const updateData: any = {}
@@ -110,86 +154,11 @@ export async function PUT(
       }
     }
 
-    // Convert date strings to Date objects
-    if (updateData.timeline) {
-      if (updateData.timeline.startDate) {
-        updateData.timeline.startDate = new Date(updateData.timeline.startDate)
-      }
-      if (updateData.timeline.endDate) {
-        updateData.timeline.endDate = new Date(updateData.timeline.endDate)
-      }
-      if (updateData.timeline.reviewDates) {
-        updateData.timeline.reviewDates = updateData.timeline.reviewDates.map((date: string) => new Date(date))
-      }
-    }
-
-    if (updateData.schedule) {
-      updateData.schedule = updateData.schedule.map((item: any) => ({
-        ...item,
-        scheduledDate: item.scheduledDate ? new Date(item.scheduledDate) : item.scheduledDate,
-        completedDate: item.completedDate ? new Date(item.completedDate) : item.completedDate
-      }))
-    }
-
-    if (updateData.progress?.nextReviewDate) {
-      updateData.progress.nextReviewDate = new Date(updateData.progress.nextReviewDate)
-    }
-
-    // Recalculate cost analysis if product recommendations changed
-    if (updateData.productRecommendations) {
-      const monthlyCosts = {
-        retail: 0,
-        wholesale: 0,
-        preferredCustomer: 0
-      }
-
-      updateData.productRecommendations.forEach((rec: any) => {
-        monthlyCosts.retail += rec.estimatedCost?.retail || 0
-        monthlyCosts.wholesale += rec.estimatedCost?.wholesale || 0
-        monthlyCosts.preferredCustomer += rec.estimatedCost?.preferredCustomer || 0
-      })
-
-      const timeline = updateData.timeline || existingHealthPlan.timeline
-      const duration = timeline?.endDate && timeline?.startDate 
-        ? Math.ceil((new Date(timeline.endDate).getTime() - new Date(timeline.startDate).getTime()) / (1000 * 60 * 60 * 24 * 30))
-        : 3
-
-      updateData.costAnalysis = {
-        ...updateData.costAnalysis,
-        estimatedMonthlyCost: monthlyCosts,
-        totalEstimatedCost: {
-          retail: monthlyCosts.retail * duration,
-          wholesale: monthlyCosts.wholesale * duration,
-          preferredCustomer: monthlyCosts.preferredCustomer * duration
-        }
-      }
-    }
-
-    // Recalculate progress if goals changed
-    if (updateData.healthGoals) {
-      const activeGoals = updateData.healthGoals.filter((goal: any) => goal.status === 'active')
-      const completedGoals = updateData.healthGoals.filter((goal: any) => goal.status === 'achieved')
-      
-      updateData.progress = {
-        ...updateData.progress,
-        overallProgress: activeGoals.length > 0 
-          ? Math.round(activeGoals.reduce((sum: number, goal: any) => sum + (goal.progress?.percentage || 0), 0) / activeGoals.length)
-          : 0,
-        goalsAchieved: completedGoals.length,
-        totalGoals: updateData.healthGoals.length
-      }
-    }
-
-    updateData.updatedAt = new Date()
-
     const updatedHealthPlan = await HealthPlan.findByIdAndUpdate(
       params.id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('customerId', 'name email phone category')
-     .populate('assignedToId', 'name email department')
-     .populate('createdById', 'name email')
-     .populate('productRecommendations.productId', 'productCode productName category')
+    ).populate('customerId', 'firstName lastName email phone customerType')
 
     return NextResponse.json({
       message: 'Health plan updated successfully',
@@ -212,10 +181,10 @@ export async function DELETE(
   try {
     const decoded = verifyToken(request)
     
-    if (!decoded || !['system_admin', 'admin'].includes(decoded.role)) {
+    if (!decoded) {
       return NextResponse.json(
-        { message: 'Unauthorized - Admin access required' },
-        { status: 403 }
+        { message: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
@@ -229,21 +198,11 @@ export async function DELETE(
       )
     }
 
-    // Don't allow deletion of active plans without special permission
-    if (healthPlan.status === 'active' && !request.nextUrl.searchParams.get('force')) {
-      return NextResponse.json(
-        { message: 'Cannot delete active health plans without force parameter' },
-        { status: 400 }
-      )
-    }
-
     // Soft delete by setting isActive to false
     await HealthPlan.findByIdAndUpdate(
       params.id,
       { 
-        isActive: false,
-        status: 'cancelled',
-        updatedAt: new Date()
+        isActive: false
       }
     )
 

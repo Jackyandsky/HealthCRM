@@ -29,10 +29,6 @@ interface FollowUp {
   customerName: string
   customerEmail?: string
   customerPhone?: string
-  assignedToId: any
-  assignedToName: string
-  createdById: any
-  createdByName: string
   title: string
   description?: string
   type: string
@@ -174,7 +170,21 @@ export default function FollowUpDetailPage({ params }: { params: { id: string } 
       
       if (response.ok) {
         const data = await response.json()
-        setFollowUp(data.data)
+        const followUpData = data.data
+        
+        // Extract customer information from populated customerId
+        if (followUpData.customerId && typeof followUpData.customerId === 'object') {
+          followUpData.customerName = `${followUpData.customerId.firstName} ${followUpData.customerId.lastName}`
+          followUpData.customerEmail = followUpData.customerId.email
+          followUpData.customerPhone = followUpData.customerId.phone
+        }
+        
+        // Extract assigned user information
+        if (followUpData.assignedToId && typeof followUpData.assignedToId === 'object') {
+          followUpData.assignedToName = followUpData.assignedToId.name
+        }
+        
+        setFollowUp(followUpData)
       } else {
         router.push('/dashboard/follow-ups')
       }
@@ -346,20 +356,12 @@ export default function FollowUpDetailPage({ params }: { params: { id: string } 
                     <dd className="mt-1 text-sm text-gray-900 font-medium">{followUp.customerName}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">负责人</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{followUp.assignedToName}</dd>
-                  </div>
-                  <div>
                     <dt className="text-sm font-medium text-gray-500">回访类型</dt>
                     <dd className="mt-1 text-sm text-gray-900">{FOLLOW_UP_TYPES[followUp.type] || followUp.type}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500">沟通方式</dt>
                     <dd className="mt-1 text-sm text-gray-900">{COMMUNICATION_METHODS[followUp.communicationMethod] || followUp.communicationMethod}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">创建人</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{followUp.createdByName}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500">创建时间</dt>

@@ -26,49 +26,11 @@ const userSchema = new mongoose.Schema({
   },
   phone: String,
   
-  // 销售相关信息
-  salesInfo: {
-    territory: String, // 销售区域
-    teamLead: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    commissionRate: Number, // 佣金比例
-    salesGoal: {
-      monthly: Number,
-      quarterly: Number,
-      annual: Number,
-    },
-    certification: {
-      level: String, // 认证级别
-      expiryDate: Date,
-    },
-  },
-  
-  // 业绩统计
-  performance: {
-    currentMonth: {
-      sales: Number,
-      customers: Number,
-      orders: Number,
-    },
-    currentQuarter: {
-      sales: Number,
-      customers: Number,
-      orders: Number,
-    },
-    currentYear: {
-      sales: Number,
-      customers: Number,
-      orders: Number,
-    },
-  },
-  
-  // 客户管理权限
-  customerAccess: {
-    canViewAll: Boolean,
-    assignedTerritories: [String],
-    customerLimit: Number,
+  // 简化的销售信息
+  territory: String,
+  commissionRate: {
+    type: Number,
+    default: 0.05, // 5% 默认佣金
   },
   
   avatar: String,

@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     // Get customers needing follow-up
     const pendingFollowUps = await Customer.countDocuments({
       isActive: true,
-      'followUp.nextContactDate': { $lte: today }
+      nextContactDate: { $lte: today }
     })
 
     // Mock revenue data for now

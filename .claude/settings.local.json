@@ -18,7 +18,17 @@
       "Bash(npm run lint)",
       "Bash(npm run build:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(claude --version)",
+      "mcp__MongoDB__atlas-list-clusters",
+      "mcp__MongoDB__atlas-connect-cluster",
+      "mcp__MongoDB__list-databases",
+      "mcp__MongoDB__connect",
+      "Bash(rm:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run seed:*)"
     ],
     "deny": []
   }

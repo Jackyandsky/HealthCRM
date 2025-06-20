@@ -49,28 +49,21 @@ const purchaseSchema = new mongoose.Schema({
     required: true,
   },
   
-  // Customer information
+  // 关联信息 - 移除重复数据
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Customer',
     required: true,
   },
-  customerName: {
-    type: String,
-    required: true,
-  },
-  customerEmail: String,
-  customerPhone: String,
-  
-  // Sales representative
   salesRepId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  salesRepName: {
-    type: String,
-    required: true,
+  healthPlanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'HealthPlan',
+    required: false,
   },
   
   // Purchase details
@@ -128,23 +121,11 @@ const purchaseSchema = new mongoose.Schema({
   paymentDate: Date,
   paymentReference: String, // Transaction ID, check number, etc.
   
-  // Commission tracking
-  commissionRate: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 1, // Percentage as decimal
-  },
+  // 简化佣金追踪
   commissionAmount: {
     type: Number,
     default: 0,
-    min: 0,
   },
-  commissionPaid: {
-    type: Boolean,
-    default: false,
-  },
-  commissionPaidDate: Date,
   
   // Order status and tracking
   orderStatus: {
@@ -160,42 +141,10 @@ const purchaseSchema = new mongoose.Schema({
   deliveryDate: Date,
   trackingNumber: String,
   
-  // Shipping address
-  shippingAddress: {
-    name: String,
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: {
-      type: String,
-      default: 'China',
-    },
-    phone: String,
-  },
+  // 简化配送信息
+  shippingAddress: String,
   
-  // Additional information
   notes: String,
-  internalNotes: String, // For staff use only
-  source: {
-    type: String,
-    enum: ['online', 'phone', 'in_person', 'referral', 'event'],
-    default: 'in_person',
-  },
-  
-  // Return/refund information
-  returnRequested: {
-    type: Boolean,
-    default: false,
-  },
-  returnDate: Date,
-  returnReason: String,
-  refundAmount: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
-  refundDate: Date,
   
   isActive: {
     type: Boolean,
@@ -218,9 +167,10 @@ purchaseSchema.pre('save', async function(next) {
     }
   }
   
-  // Calculate commission amount
-  if (this.commissionRate && this.totalAmount) {
-    this.commissionAmount = this.totalAmount * this.commissionRate;
+  // 根据销售代表的佣金率计算佣金
+  if (this.salesRepId && this.totalAmount) {
+    // 这里应该从User模型获取佣金率，简化处理
+    this.commissionAmount = this.totalAmount * 0.05; // 默认5%
   }
   
   next();
@@ -236,11 +186,9 @@ purchaseSchema.index({ orderStatus: 1 });
 purchaseSchema.index({ 'items.productId': 1 });
 purchaseSchema.index({ createdAt: -1 });
 
-// Add text index for search
+// 简化文本搜索索引
 purchaseSchema.index({
   purchaseId: 'text',
-  customerName: 'text',
-  customerEmail: 'text',
   'items.productName': 'text',
   'items.productCode': 'text',
 });

@@ -19,96 +19,44 @@ import {
   TrashIcon,
   CubeIcon,
   HeartIcon,
-  SparklesIcon
+  SparklesIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline'
 
 interface HealthPlan {
   _id: string
   planId: string
   customerId: any
-  customerName: string
-  assignedToId: any
-  assignedToName: string
   title: string
   description?: string
-  planType: string
-  status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled' | 'review_needed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  timeline: {
-    startDate: string
-    endDate?: string
-  }
-  progress: {
-    overallProgress: number
-    goalsAchieved: number
-    totalGoals: number
-    complianceRate: number
-    nextReviewDate?: string
-  }
-  costAnalysis: {
-    estimatedMonthlyCost: {
-      retail: number
-      wholesale: number
-      preferredCustomer: number
-    }
-  }
-  healthGoals: any[]
-  productRecommendations: any[]
+  tags: string[]
+  products?: any[]
+  productRecommendations?: any[]
   createdAt: string
   updatedAt: string
 }
 
 interface HealthPlanSummary {
   totalPlans: number
-  activePlans: number
-  draftPlans: number
-  completedPlans: number
-  reviewNeeded: number
-  averageProgress: number
-  totalEstimatedCost: number
+  totalProducts: number
+  totalCustomers: number
 }
 
-const PLAN_TYPES = [
-  { value: 'basic', label: '基础计划', icon: DocumentTextIcon },
-  { value: 'comprehensive', label: '综合计划', icon: CubeIcon },
-  { value: 'specialized', label: '专项计划', icon: HeartIcon },
-  { value: 'maintenance', label: '维护计划', icon: CheckCircleIcon },
-  { value: 'intensive', label: '强化计划', icon: SparklesIcon },
-]
-
-const PRIORITY_OPTIONS = [
-  { value: 'urgent', label: '紧急', color: 'bg-red-100 text-red-800' },
-  { value: 'high', label: '高', color: 'bg-orange-100 text-orange-800' },
-  { value: 'medium', label: '中', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'low', label: '低', color: 'bg-green-100 text-green-800' },
-]
-
-const STATUS_OPTIONS = [
-  { value: 'draft', label: '草稿', color: 'bg-gray-100 text-gray-800' },
-  { value: 'active', label: '进行中', color: 'bg-blue-100 text-blue-800' },
-  { value: 'paused', label: '暂停', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'completed', label: '已完成', color: 'bg-green-100 text-green-800' },
-  { value: 'cancelled', label: '已取消', color: 'bg-red-100 text-red-800' },
-  { value: 'review_needed', label: '需要复查', color: 'bg-purple-100 text-purple-800' },
+const COMMON_TAGS = [
+  '基础营养', '全面保健', '体重管理', '美肌护理', '日常维护',
+  '免疫提升', '睡眠改善', '消化健康', '骨骼健康', '心血管'
 ]
 
 export default function HealthPlansPage() {
   const [healthPlans, setHealthPlans] = useState<HealthPlan[]>([])
   const [summary, setSummary] = useState<HealthPlanSummary>({
     totalPlans: 0,
-    activePlans: 0,
-    draftPlans: 0,
-    completedPlans: 0,
-    reviewNeeded: 0,
-    averageProgress: 0,
-    totalEstimatedCost: 0,
+    totalProducts: 0,
+    totalCustomers: 0,
   })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [priorityFilter, setPriorityFilter] = useState('')
-  const [planTypeFilter, setPlanTypeFilter] = useState('')
-  const [needsReview, setNeedsReview] = useState(false)
+  const [tagFilter, setTagFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
@@ -122,7 +70,7 @@ export default function HealthPlansPage() {
     }
     
     loadHealthPlans()
-  }, [currentPage, search, statusFilter, priorityFilter, planTypeFilter, needsReview])
+  }, [currentPage, search, tagFilter])
 
   const loadHealthPlans = async () => {
     try {
@@ -135,10 +83,7 @@ export default function HealthPlansPage() {
       })
       
       if (search) params.append('search', search)
-      if (statusFilter) params.append('status', statusFilter)
-      if (priorityFilter) params.append('priority', priorityFilter)
-      if (planTypeFilter) params.append('planType', planTypeFilter)
-      if (needsReview) params.append('needsReview', 'true')
+      if (tagFilter) params.append('tag', tagFilter)
       
       const response = await fetch(`/api/health-plans?${params}`, {
         headers: {
@@ -148,10 +93,13 @@ export default function HealthPlansPage() {
       
       if (response.ok) {
         const data = await response.json()
-        setHealthPlans(data.data.healthPlans)
-        setTotalPages(data.data.pagination.totalPages)
-        setTotalCount(data.data.pagination.totalCount)
-        setSummary(data.data.summary)
+        console.log('API Response:', data)
+        setHealthPlans(data.data.healthPlans || [])
+        setTotalPages(data.data.pagination.totalPages || 1)
+        setTotalCount(data.data.pagination.totalCount || 0)
+        setSummary(data.data.summary || { totalPlans: 0, totalProducts: 0, totalCustomers: 0 })
+      } else {
+        console.error('API request failed:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error loading health plans:', error)
@@ -161,7 +109,7 @@ export default function HealthPlansPage() {
   }
 
   const handleDelete = async (planId: string, planCode: string) => {
-    if (!confirm(`确定要删除健康计划 "${planCode}" 吗？`)) {
+    if (!confirm(`确定要删除产品方案 "${planCode}" 吗？`)) {
       return
     }
 
@@ -186,34 +134,13 @@ export default function HealthPlansPage() {
     }
   }
 
-  const getOptionDisplay = (value: string, options: any[]) => {
-    const option = options.find(opt => opt.value === value)
-    return option || { label: value, color: 'bg-gray-100 text-gray-800' }
-  }
-
-  const getPlanTypeDisplay = (value: string) => {
-    const planType = PLAN_TYPES.find(type => type.value === value)
-    return planType?.label || value
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN')
   }
 
-  const isReviewNeeded = (plan: HealthPlan) => {
-    if (plan.status === 'review_needed') return true
-    if (plan.progress.nextReviewDate) {
-      return new Date(plan.progress.nextReviewDate) <= new Date()
-    }
-    return false
-  }
-
   const resetFilters = () => {
     setSearch('')
-    setStatusFilter('')
-    setPriorityFilter('')
-    setPlanTypeFilter('')
-    setNeedsReview(false)
+    setTagFilter('')
     setCurrentPage(1)
   }
 
@@ -233,25 +160,25 @@ export default function HealthPlansPage() {
           <div className="py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">健康计划管理</h1>
+                <h1 className="text-2xl font-bold text-gray-900">产品消费计划</h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  个性化健康计划制定和进度跟踪
+                  定制化产品消费指导方案
                 </p>
               </div>
               <div className="flex items-center space-x-3">
+                <Link
+                  href="/dashboard"
+                  className="btn btn-secondary flex items-center"
+                >
+                  <HomeIcon className="h-5 w-5 mr-2" />
+                  主控面板
+                </Link>
                 <Link
                   href="/dashboard/health-plans/templates"
                   className="btn btn-secondary flex items-center"
                 >
                   <CubeIcon className="h-5 w-5 mr-2" />
                   计划模板
-                </Link>
-                <Link
-                  href="/dashboard/health-plans/analytics"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <ChartBarIcon className="h-5 w-5 mr-2" />
-                  数据分析
                 </Link>
                 <Link
                   href="/dashboard/health-plans/new"
@@ -268,7 +195,7 @@ export default function HealthPlansPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6 mb-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -278,7 +205,7 @@ export default function HealthPlansPage() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">
-                      总计划数
+                      总方案数
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
                       {summary.totalPlans}
@@ -293,15 +220,15 @@ export default function HealthPlansPage() {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <ClockIcon className="h-6 w-6 text-green-400" />
+                  <CubeIcon className="h-6 w-6 text-green-400" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">
-                      进行中
+                      涉及产品
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {summary.activePlans}
+                      {summary.totalProducts}
                     </dd>
                   </dl>
                 </div>
@@ -313,75 +240,15 @@ export default function HealthPlansPage() {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <DocumentTextIcon className="h-6 w-6 text-gray-400" />
+                  <UserIcon className="h-6 w-6 text-indigo-400" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">
-                      草稿
+                      服务客户
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {summary.draftPlans}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      已完成
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.completedPlans}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      需复查
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.reviewNeeded}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ChartBarIcon className="h-6 w-6 text-indigo-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      平均进度
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.averageProgress ? `${summary.averageProgress.toFixed(1)}%` : 'N/A'}
+                      {summary.totalCustomers}
                     </dd>
                   </dl>
                 </div>
@@ -393,10 +260,10 @@ export default function HealthPlansPage() {
         {/* Filters */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <label htmlFor="search" className="block text-sm font-medium text-gray-700">
-                  搜索计划
+                  搜索方案
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -414,80 +281,30 @@ export default function HealthPlansPage() {
               </div>
 
               <div>
-                <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700">
-                  状态
+                <label htmlFor="tagFilter" className="block text-sm font-medium text-gray-700">
+                  标签筛选
                 </label>
                 <select
-                  id="statusFilter"
+                  id="tagFilter"
                   className="mt-1 input"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
                 >
-                  <option value="">所有状态</option>
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  <option value="">所有标签</option>
+                  {COMMON_TAGS.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tag}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="priorityFilter" className="block text-sm font-medium text-gray-700">
-                  优先级
-                </label>
-                <select
-                  id="priorityFilter"
-                  className="mt-1 input"
-                  value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                >
-                  <option value="">所有优先级</option>
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="planTypeFilter" className="block text-sm font-medium text-gray-700">
-                  计划类型
-                </label>
-                <select
-                  id="planTypeFilter"
-                  className="mt-1 input"
-                  value={planTypeFilter}
-                  onChange={(e) => setPlanTypeFilter(e.target.value)}
-                >
-                  <option value="">所有类型</option>
-                  {PLAN_TYPES.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-end space-x-2">
-                <div className="flex items-center">
-                  <input
-                    id="needsReview"
-                    type="checkbox"
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    checked={needsReview}
-                    onChange={(e) => setNeedsReview(e.target.checked)}
-                  />
-                  <label htmlFor="needsReview" className="ml-2 block text-sm text-gray-700">
-                    需要复查
-                  </label>
-                </div>
+              <div className="flex items-end">
                 <button
                   onClick={resetFilters}
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary w-full"
                 >
-                  重置
+                  重置筛选
                 </button>
               </div>
             </div>
@@ -497,7 +314,7 @@ export default function HealthPlansPage() {
         {/* Health Plans Table */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">健康计划列表</h3>
+            <h3 className="text-lg font-medium text-gray-900">产品消费方案列表</h3>
           </div>
           
           {loading ? (
@@ -506,7 +323,7 @@ export default function HealthPlansPage() {
             </div>
           ) : healthPlans.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              没有找到健康计划
+              没有找到产品方案
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -514,19 +331,19 @@ export default function HealthPlansPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      计划信息
+                      方案信息
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       客户信息
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      类型/状态
+                      标签
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      进度
+                      产品数量
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      时间
+                      创建时间
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       操作
@@ -534,117 +351,80 @@ export default function HealthPlansPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {healthPlans.map((plan) => {
-                    const priorityDisplay = getOptionDisplay(plan.priority, PRIORITY_OPTIONS)
-                    const statusDisplay = getOptionDisplay(plan.status, STATUS_OPTIONS)
-                    const reviewNeeded = isReviewNeeded(plan)
-                    
-                    return (
-                      <tr key={plan._id} className={`hover:bg-gray-50 ${reviewNeeded ? 'bg-yellow-50' : ''}`}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {plan.title}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              编号: {plan.planId}
-                            </div>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${priorityDisplay.color}`}>
-                                {priorityDisplay.label}
-                              </span>
-                              {reviewNeeded && (
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                  需复查
-                                </span>
-                              )}
-                            </div>
+                  {healthPlans.map((plan) => (
+                    <tr key={plan._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {plan.title}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {plan.customerName}
-                            </div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <UserIcon className="h-4 w-4 mr-1" />
-                              {plan.assignedToName}
-                            </div>
+                          <div className="text-sm text-gray-500">
+                            编号: {plan.planId}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm text-gray-900 mb-1">
-                              {getPlanTypeDisplay(plan.planType)}
+                          {plan.description && (
+                            <div className="text-xs text-gray-400 mt-1 truncate max-w-xs">
+                              {plan.description}
                             </div>
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusDisplay.color}`}>
-                              {statusDisplay.label}
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {plan.customerId?.firstName} {plan.customerId?.lastName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {plan.customerId?.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {plan.tags?.map((tag, index) => (
+                            <span 
+                              key={index} 
+                              className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
+                            >
+                              {tag}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm text-gray-900">
-                              {plan.progress.overallProgress}%
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ width: `${plan.progress.overallProgress}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              目标: {plan.progress.goalsAchieved}/{plan.progress.totalGoals}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm text-gray-900">
-                              开始: {formatDate(plan.timeline.startDate)}
-                            </div>
-                            {plan.timeline.endDate && (
-                              <div className="text-sm text-gray-500">
-                                结束: {formatDate(plan.timeline.endDate)}
-                              </div>
-                            )}
-                            {plan.progress.nextReviewDate && (
-                              <div className="text-xs text-gray-500">
-                                复查: {formatDate(plan.progress.nextReviewDate)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
-                            <Link
-                              href={`/dashboard/health-plans/${plan._id}`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="查看详情"
-                            >
-                              <EyeIcon className="h-4 w-4" />
-                            </Link>
-                            <Link
-                              href={`/dashboard/health-plans/${plan._id}/edit`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="编辑"
-                            >
-                              <PencilIcon className="h-4 w-4" />
-                            </Link>
-                            {plan.status !== 'completed' && (
-                              <button
-                                onClick={() => handleDelete(plan._id, plan.planId)}
-                                className="text-red-600 hover:text-red-900"
-                                title="删除"
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {(plan.products?.length || plan.productRecommendations?.length || 0)} 个产品
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatDate(plan.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Link
+                            href={`/dashboard/health-plans/${plan._id}`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="查看详情"
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </Link>
+                          <Link
+                            href={`/dashboard/health-plans/${plan._id}/edit`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="编辑"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(plan._id, plan.planId)}
+                            className="text-red-600 hover:text-red-900"
+                            title="删除"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

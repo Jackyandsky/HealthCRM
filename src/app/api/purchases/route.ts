@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('customerId', 'name email phone category')
-        .populate('salesRepId', 'name email department')
+        .populate('customerId', 'firstName lastName email phone customerType')
+        .populate('salesRepId', 'name email territory')
         .populate('items.productId', 'productCode productName category stockStatus')
         .lean(),
       Purchase.countDocuments(filter)
@@ -89,7 +89,6 @@ export async function GET(request: NextRequest) {
           totalRevenue: { $sum: '$totalAmount' },
           totalOrders: { $sum: 1 },
           averageOrderValue: { $avg: '$totalAmount' },
-          totalCommission: { $sum: '$commissionAmount' },
         }
       }
     ])
@@ -110,7 +109,6 @@ export async function GET(request: NextRequest) {
           totalRevenue: 0,
           totalOrders: 0,
           averageOrderValue: 0,
-          totalCommission: 0,
         }
       }
     })
@@ -215,13 +213,16 @@ export async function POST(request: NextRequest) {
     const tax = (subtotal - totalDiscount) * taxRate
     const totalAmount = subtotal - totalDiscount + tax + shippingCost
 
+    // Generate purchase ID
+    const count = await Purchase.countDocuments()
+    const year = new Date().getFullYear()
+    const month = String(new Date().getMonth() + 1).padStart(2, '0')
+    const purchaseId = `PUR${year}${month}${String(count + 1).padStart(4, '0')}`
+
     const purchaseData = {
+      purchaseId,
       customerId: body.customerId,
-      customerName: customer.name,
-      customerEmail: customer.email,
-      customerPhone: customer.phone,
       salesRepId: decoded.userId,
-      salesRepName: decoded.name || 'Admin',
       items: processedItems,
       subtotal,
       totalDiscount,
@@ -235,9 +236,6 @@ export async function POST(request: NextRequest) {
       orderDate: body.orderDate ? new Date(body.orderDate) : new Date(),
       shippingAddress: body.shippingAddress,
       notes: body.notes,
-      internalNotes: body.internalNotes,
-      source: body.source || 'in_person',
-      commissionRate: parseFloat(body.commissionRate || 0),
     }
 
     const purchase = new Purchase(purchaseData)
@@ -245,8 +243,8 @@ export async function POST(request: NextRequest) {
 
     // Populate the created purchase
     const populatedPurchase = await Purchase.findById(purchase._id)
-      .populate('customerId', 'name email phone category')
-      .populate('salesRepId', 'name email department')
+      .populate('customerId', 'firstName lastName email phone customerType')
+      .populate('salesRepId', 'name email territory')
       .populate('items.productId', 'productCode productName category stockStatus')
 
     return NextResponse.json({

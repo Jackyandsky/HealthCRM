@@ -20,9 +20,9 @@ export async function GET(
     await connectDB()
     
     const purchase = await Purchase.findById(params.id)
-      .populate('customerId', 'name email phone category address')
-      .populate('salesRepId', 'name email department employeeId')
-      .populate('items.productId', 'productCode productName category stockStatus retailPrice wholesalePrice preferredCustomerPrice')
+      .populate('customerId', 'firstName lastName email phone customerType city')
+      .populate('salesRepId', 'name email territory employeeId')
+      .populate('items.productId', 'productCode productName category stockStatus retailPrice wholesalePrice preferredPrice')
       .lean()
     
     if (!purchase) {

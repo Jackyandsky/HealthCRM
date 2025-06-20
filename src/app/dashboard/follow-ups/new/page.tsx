@@ -1,40 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeftIcon,
-  UserIcon,
-  CalendarDaysIcon,
-  ChatBubbleLeftRightIcon,
-  ExclamationTriangleIcon,
-  PlusIcon,
-  TrashIcon
 } from '@heroicons/react/24/outline'
 
 interface Customer {
   _id: string
   customerId: string
-  name: string
+  firstName: string
+  lastName: string
   email?: string
   phone?: string
-  category: string
-}
-
-interface User {
-  _id: string
-  employeeId: string
-  name: string
-  email: string
-  department?: string
-}
-
-interface Product {
-  _id: string
-  productCode: string
-  productName: string
-  category: string
+  customerType: string
 }
 
 interface Purchase {
@@ -73,17 +53,8 @@ const COMMUNICATION_METHODS = [
   { value: 'video_call', label: '视频通话' },
 ]
 
-const ADHERENCE_OPTIONS = [
-  { value: 'excellent', label: '优秀' },
-  { value: 'good', label: '良好' },
-  { value: 'fair', label: '一般' },
-  { value: 'poor', label: '较差' },
-]
-
 export default function NewFollowUpPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [products, setProducts] = useState<Product[]>([])
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [loading, setLoading] = useState(false)
   const [customerSearch, setCustomerSearch] = useState('')
@@ -93,7 +64,6 @@ export default function NewFollowUpPage() {
   const [formData, setFormData] = useState({
     customerId: '',
     customerName: '',
-    assignedToId: '',
     title: '',
     description: '',
     type: 'general_inquiry',
@@ -101,28 +71,10 @@ export default function NewFollowUpPage() {
     scheduledDate: '',
     scheduledTime: '',
     communicationMethod: 'phone',
-    relatedPurchaseId: '',
-    publicNotes: '',
-    internalNotes: '',
-    tags: [] as string[],
-    productUsage: [] as Array<{
-      productId: string
-      productName: string
-      adherence: string
-      effectiveness: number
-      remainingQuantity?: number
-      notes?: string
-    }>,
-    actionItems: [] as Array<{
-      description: string
-      dueDate?: string
-      assignedTo?: string
-      priority: string
-    }>
+    relatedPurchaseId: ''
   })
-
-  const [newTag, setNewTag] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  const customerDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -135,12 +87,24 @@ export default function NewFollowUpPage() {
   }, [])
 
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target as Node)) {
+        setShowCustomerDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
     if (customerSearch) {
-      const filtered = customers.filter(customer =>
-        customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-        customer.customerId.toLowerCase().includes(customerSearch.toLowerCase()) ||
-        customer.email?.toLowerCase().includes(customerSearch.toLowerCase())
-      )
+      const filtered = customers.filter(customer => {
+        const fullName = `${customer.firstName} ${customer.lastName}`
+        return fullName.toLowerCase().includes(customerSearch.toLowerCase()) ||
+               customer.customerId.toLowerCase().includes(customerSearch.toLowerCase()) ||
+               customer.email?.toLowerCase().includes(customerSearch.toLowerCase())
+      })
       setFilteredCustomers(filtered)
     } else {
       setFilteredCustomers(customers)
@@ -151,31 +115,13 @@ export default function NewFollowUpPage() {
     try {
       const token = localStorage.getItem('token')
       
-      const [customersRes, usersRes, productsRes] = await Promise.all([
-        fetch('/api/customers?limit=100', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/users', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/products?limit=100', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        })
-      ])
+      const customersRes = await fetch('/api/customers?limit=100', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
 
       if (customersRes.ok) {
         const customersData = await customersRes.json()
-        setCustomers(customersData.data.customers || [])
-      }
-
-      if (usersRes.ok) {
-        const usersData = await usersRes.json()
-        setUsers(usersData.data || [])
-      }
-
-      if (productsRes.ok) {
-        const productsData = await productsRes.json()
-        setProducts(productsData.data.products || [])
+        setCustomers(customersData.customers || [])
       }
     } catch (error) {
       console.error('Error loading initial data:', error)
@@ -199,90 +145,17 @@ export default function NewFollowUpPage() {
   }
 
   const handleCustomerSelect = (customer: Customer) => {
+    const fullName = `${customer.firstName} ${customer.lastName}`
     setFormData(prev => ({
       ...prev,
       customerId: customer._id,
-      customerName: customer.name
+      customerName: fullName
     }))
-    setCustomerSearch(customer.name)
+    setCustomerSearch(fullName)
     setShowCustomerDropdown(false)
     loadCustomerPurchases(customer._id)
   }
 
-  const addTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }))
-      setNewTag('')
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-  }
-
-  const addProductUsage = () => {
-    setFormData(prev => ({
-      ...prev,
-      productUsage: [...prev.productUsage, {
-        productId: '',
-        productName: '',
-        adherence: 'good',
-        effectiveness: 3,
-        remainingQuantity: undefined,
-        notes: ''
-      }]
-    }))
-  }
-
-  const updateProductUsage = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      productUsage: prev.productUsage.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }))
-  }
-
-  const removeProductUsage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      productUsage: prev.productUsage.filter((_, i) => i !== index)
-    }))
-  }
-
-  const addActionItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      actionItems: [...prev.actionItems, {
-        description: '',
-        dueDate: '',
-        assignedTo: '',
-        priority: 'medium'
-      }]
-    }))
-  }
-
-  const updateActionItem = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      actionItems: prev.actionItems.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }))
-  }
-
-  const removeActionItem = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      actionItems: prev.actionItems.filter((_, i) => i !== index)
-    }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -296,13 +169,23 @@ export default function NewFollowUpPage() {
 
     try {
       const token = localStorage.getItem('token')
+      
+      // Prepare submission data with required fields
+      const submissionData = {
+        ...formData,
+        scheduledDate: new Date(formData.scheduledDate + (formData.scheduledTime ? `T${formData.scheduledTime}` : 'T00:00')),
+        publicNotes: formData.description, // Use description as notes
+        // Remove fields that don't exist in the model
+        customerName: undefined
+      }
+      
       const response = await fetch('/api/follow-ups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       })
 
       if (response.ok) {
@@ -347,17 +230,14 @@ export default function NewFollowUpPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
+          {/* Follow-up Information */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <UserIcon className="h-5 w-5 mr-2" />
-                基本信息
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900">创建回访</h3>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="relative">
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="relative sm:col-span-2 lg:col-span-1" ref={customerDropdownRef}>
                   <label htmlFor="customer" className="block text-sm font-medium text-gray-700">
                     客户 *
                   </label>
@@ -380,7 +260,7 @@ export default function NewFollowUpPage() {
                           className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
                           onClick={() => handleCustomerSelect(customer)}
                         >
-                          <div className="font-medium">{customer.name}</div>
+                          <div className="font-medium">{customer.firstName} {customer.lastName}</div>
                           <div className="text-sm text-gray-500">
                             {customer.customerId} | {customer.email}
                           </div>
@@ -388,54 +268,6 @@ export default function NewFollowUpPage() {
                       ))}
                     </div>
                   )}
-                </div>
-
-                <div>
-                  <label htmlFor="assignedToId" className="block text-sm font-medium text-gray-700">
-                    负责人
-                  </label>
-                  <select
-                    id="assignedToId"
-                    className="mt-1 input"
-                    value={formData.assignedToId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, assignedToId: e.target.value }))}
-                  >
-                    <option value="">选择负责人</option>
-                    {users.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name} ({user.employeeId})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                    回访标题 *
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    className="mt-1 input"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="输入回访标题"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    回访描述
-                  </label>
-                  <textarea
-                    id="description"
-                    rows={3}
-                    className="mt-1 input"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="输入回访描述..."
-                  />
                 </div>
 
                 <div>
@@ -474,20 +306,22 @@ export default function NewFollowUpPage() {
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Schedule Information */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <CalendarDaysIcon className="h-5 w-5 mr-2" />
-                时间安排
-              </h3>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                    回访标题 *
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    className="mt-1 input"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="输入回访标题"
+                    required
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
                     安排日期 *
@@ -533,302 +367,41 @@ export default function NewFollowUpPage() {
                     ))}
                   </select>
                 </div>
-              </div>
 
-              {purchases.length > 0 && (
-                <div>
-                  <label htmlFor="relatedPurchaseId" className="block text-sm font-medium text-gray-700">
-                    关联订单
-                  </label>
-                  <select
-                    id="relatedPurchaseId"
-                    className="mt-1 input"
-                    value={formData.relatedPurchaseId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, relatedPurchaseId: e.target.value }))}
-                  >
-                    <option value="">选择关联订单</option>
-                    {purchases.map((purchase) => (
-                      <option key={purchase._id} value={purchase._id}>
-                        {purchase.purchaseId} - ¥{purchase.totalAmount} ({new Date(purchase.orderDate).toLocaleDateString('zh-CN')})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Product Usage */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">产品使用情况</h3>
-                <button
-                  type="button"
-                  onClick={addProductUsage}
-                  className="btn btn-secondary btn-sm flex items-center"
-                >
-                  <PlusIcon className="h-4 w-4 mr-1" />
-                  添加产品
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              {formData.productUsage.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">暂无产品使用记录</p>
-              ) : (
-                <div className="space-y-4">
-                  {formData.productUsage.map((usage, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium text-gray-900">产品 {index + 1}</h4>
-                        <button
-                          type="button"
-                          onClick={() => removeProductUsage(index)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">产品</label>
-                          <select
-                            className="mt-1 input"
-                            value={usage.productId}
-                            onChange={(e) => {
-                              const product = products.find(p => p._id === e.target.value)
-                              updateProductUsage(index, 'productId', e.target.value)
-                              updateProductUsage(index, 'productName', product?.productName || '')
-                            }}
-                          >
-                            <option value="">选择产品</option>
-                            {products.map((product) => (
-                              <option key={product._id} value={product._id}>
-                                {product.productName} ({product.productCode})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">依从性</label>
-                          <select
-                            className="mt-1 input"
-                            value={usage.adherence}
-                            onChange={(e) => updateProductUsage(index, 'adherence', e.target.value)}
-                          >
-                            {ADHERENCE_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">效果评分 (1-5)</label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="5"
-                            className="mt-1 input"
-                            value={usage.effectiveness}
-                            onChange={(e) => updateProductUsage(index, 'effectiveness', parseInt(e.target.value))}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">剩余数量</label>
-                          <input
-                            type="number"
-                            min="0"
-                            className="mt-1 input"
-                            value={usage.remainingQuantity || ''}
-                            onChange={(e) => updateProductUsage(index, 'remainingQuantity', e.target.value ? parseInt(e.target.value) : undefined)}
-                          />
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700">备注</label>
-                          <input
-                            type="text"
-                            className="mt-1 input"
-                            value={usage.notes || ''}
-                            onChange={(e) => updateProductUsage(index, 'notes', e.target.value)}
-                            placeholder="使用情况备注..."
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Action Items */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">行动事项</h3>
-                <button
-                  type="button"
-                  onClick={addActionItem}
-                  className="btn btn-secondary btn-sm flex items-center"
-                >
-                  <PlusIcon className="h-4 w-4 mr-1" />
-                  添加事项
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              {formData.actionItems.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">暂无行动事项</p>
-              ) : (
-                <div className="space-y-4">
-                  {formData.actionItems.map((item, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium text-gray-900">事项 {index + 1}</h4>
-                        <button
-                          type="button"
-                          onClick={() => removeActionItem(index)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700">描述</label>
-                          <input
-                            type="text"
-                            className="mt-1 input"
-                            value={item.description}
-                            onChange={(e) => updateActionItem(index, 'description', e.target.value)}
-                            placeholder="输入行动事项描述..."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">优先级</label>
-                          <select
-                            className="mt-1 input"
-                            value={item.priority}
-                            onChange={(e) => updateActionItem(index, 'priority', e.target.value)}
-                          >
-                            {PRIORITY_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">截止日期</label>
-                          <input
-                            type="date"
-                            className="mt-1 input"
-                            value={item.dueDate || ''}
-                            onChange={(e) => updateActionItem(index, 'dueDate', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">负责人</label>
-                          <select
-                            className="mt-1 input"
-                            value={item.assignedTo || ''}
-                            onChange={(e) => updateActionItem(index, 'assignedTo', e.target.value)}
-                          >
-                            <option value="">选择负责人</option>
-                            {users.map((user) => (
-                              <option key={user._id} value={user._id}>
-                                {user.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
-                附加信息
-              </h3>
-            </div>
-            <div className="p-6 space-y-6">
-              <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                  标签
-                </label>
-                <div className="mt-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="输入标签..."
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  />
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    添加
-                  </button>
-                </div>
-                {formData.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {formData.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 text-blue-600 hover:text-blue-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+                {purchases.length > 0 && (
+                  <div className="sm:col-span-2 lg:col-span-3">
+                    <label htmlFor="relatedPurchaseId" className="block text-sm font-medium text-gray-700">
+                      关联订单 (可选)
+                    </label>
+                    <select
+                      id="relatedPurchaseId"
+                      className="mt-1 input"
+                      value={formData.relatedPurchaseId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, relatedPurchaseId: e.target.value }))}
+                    >
+                      <option value="">选择关联订单</option>
+                      {purchases.map((purchase) => (
+                        <option key={purchase._id} value={purchase._id}>
+                          {purchase.purchaseId} - ¥{purchase.totalAmount} ({new Date(purchase.orderDate).toLocaleDateString('zh-CN')})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
-              </div>
 
-              <div>
-                <label htmlFor="publicNotes" className="block text-sm font-medium text-gray-700">
-                  公开备注
-                </label>
-                <textarea
-                  id="publicNotes"
-                  rows={3}
-                  className="mt-1 input"
-                  value={formData.publicNotes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, publicNotes: e.target.value }))}
-                  placeholder="客户可见的备注信息..."
-                />
-              </div>
-
-              <div>
-                <label htmlFor="internalNotes" className="block text-sm font-medium text-gray-700">
-                  内部备注
-                </label>
-                <textarea
-                  id="internalNotes"
-                  rows={3}
-                  className="mt-1 input"
-                  value={formData.internalNotes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, internalNotes: e.target.value }))}
-                  placeholder="内部使用的备注信息..."
-                />
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    回访描述 (可选)
+                  </label>
+                  <textarea
+                    id="description"
+                    rows={3}
+                    className="mt-1 input"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="输入回访描述..."
+                  />
+                </div>
               </div>
             </div>
           </div>

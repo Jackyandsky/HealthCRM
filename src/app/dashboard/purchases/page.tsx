@@ -13,8 +13,7 @@ import {
   PencilIcon,
   TrashIcon,
   DocumentTextIcon,
-  ChartBarIcon,
-  BanknotesIcon
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 import type { Purchase } from '@/lib/types'
 
@@ -22,7 +21,6 @@ interface PurchasesSummary {
   totalRevenue: number
   totalOrders: number
   averageOrderValue: number
-  totalCommission: number
 }
 
 const PAYMENT_STATUS_OPTIONS = [
@@ -49,7 +47,6 @@ export default function PurchasesPage() {
     totalRevenue: 0,
     totalOrders: 0,
     averageOrderValue: 0,
-    totalCommission: 0,
   })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -171,18 +168,11 @@ export default function PurchasesPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <Link
-                  href="/dashboard/purchases/analytics"
+                  href="/dashboard"
                   className="btn btn-secondary flex items-center"
                 >
                   <ChartBarIcon className="h-5 w-5 mr-2" />
-                  销售分析
-                </Link>
-                <Link
-                  href="/dashboard/purchases/commissions"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <BanknotesIcon className="h-5 w-5 mr-2" />
-                  佣金管理
+                  主控台
                 </Link>
                 <Link
                   href="/dashboard/purchases/new"
@@ -199,7 +189,7 @@ export default function PurchasesPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -260,25 +250,6 @@ export default function PurchasesPage() {
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <BanknotesIcon className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      总佣金
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      ¥{summary.totalCommission.toLocaleString()}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Filters */}
@@ -442,10 +413,10 @@ export default function PurchasesPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {purchase.customerName}
+                              {purchase.customerId?.firstName} {purchase.customerId?.lastName}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {purchase.customerEmail}
+                              {purchase.customerId?.email}
                             </div>
                           </div>
                         </td>

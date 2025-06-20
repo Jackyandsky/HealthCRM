@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import FollowUp from '@/models/FollowUp'
+import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(
@@ -19,12 +20,13 @@ export async function GET(
 
     await connectDB()
     
+    // Ensure models are registered
+    User
+    
     const followUp = await FollowUp.findById(params.id)
-      .populate('customerId', 'name email phone category address healthProfile')
-      .populate('assignedToId', 'name email department employeeId')
-      .populate('createdById', 'name email department')
-      .populate('productUsage.productId', 'productCode productName category benefits healthConcerns')
-      .populate('relatedPurchaseId', 'purchaseId totalAmount orderDate items')
+      .populate('customerId', 'firstName lastName email phone customerType')
+      .populate('assignedToId', 'name email')
+      .populate('createdById', 'name email')
       .lean()
     
     if (!followUp) {
@@ -63,6 +65,9 @@ export async function PUT(
 
     await connectDB()
     
+    // Ensure models are registered
+    User
+    
     const body = await request.json()
     
     // Check if follow-up exists
@@ -79,14 +84,20 @@ export async function PUT(
       'title', 'description', 'priority', 'scheduledDate', 'scheduledTime',
       'status', 'communicationMethod', 'completedDate', 'actualDuration',
       'outcome', 'customerSatisfaction', 'customerFeedback',
-      'healthStatus', 'productUsage', 'actionItems', 'recommendations',
-      'nextFollowUpDate', 'nextFollowUpReason', 'internalNotes', 'publicNotes',
-      'attachments', 'tags', 'reminderSent', 'reminderDate'
+      'recommendations', 'nextFollowUpDate', 'notes'
     ]
 
+    // Define enum fields that shouldn't accept empty strings
+    const enumFields = ['type', 'priority', 'status', 'communicationMethod', 'outcome']
+    
     const updateData: any = {}
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
+        // Handle enum fields - don't set empty strings for enum fields
+        if (enumFields.includes(field) && body[field] === '') {
+          // Skip empty enum values - let the model use defaults or keep existing values
+          continue
+        }
         updateData[field] = body[field]
       }
     }
@@ -110,11 +121,10 @@ export async function PUT(
       params.id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('customerId', 'name email phone category')
-     .populate('assignedToId', 'name email department')
+    ).populate('customerId', 'firstName lastName email phone customerType')
+     .populate('assignedToId', 'name email')
      .populate('createdById', 'name email')
-     .populate('productUsage.productId', 'productCode productName category')
-
+    
     return NextResponse.json({
       message: 'Follow-up updated successfully',
       data: updatedFollowUp
@@ -144,6 +154,9 @@ export async function DELETE(
     }
 
     await connectDB()
+    
+    // Ensure models are registered
+    User
     
     const followUp = await FollowUp.findById(params.id)
     if (!followUp) {

@@ -61,13 +61,7 @@ export async function GET(request: NextRequest) {
       searchQuery.customerType = customerType
     }
 
-    if (priority) {
-      searchQuery['followUp.priority'] = priority
-    }
-
-    if (status) {
-      searchQuery.status = status
-    }
+    // Removed priority and status filters as they don't exist in simplified model
 
     if (salesRep) {
       searchQuery.salesRep = salesRep
@@ -94,18 +88,15 @@ export async function GET(request: NextRequest) {
         break
       case 'followup':
         // 需要回访的客户（回访日期在今天或之前）
-        searchQuery['followUp.nextContactDate'] = { $lte: today }
+        searchQuery.nextContactDate = { $lte: today }
         break
       case 'medication':
-        // 产品余量不足的客户（效果评分低或需要补充）
-        searchQuery.$or = [
-          { 'productUsage.effectiveness': { $lte: 2 } },
-          { 'productUsage.willContinue': true }
-        ]
+        // 当前使用产品的客户
+        searchQuery.currentProducts = { $exists: true, $ne: [] }
         break
       case 'urgent':
-        // 紧急处理的客户
-        searchQuery['followUp.priority'] = 'urgent'
+        // 使用客户价值来标识重要客户
+        searchQuery.customerValue = { $gte: 4 }
         break
       case 'all':
       default:
@@ -120,7 +111,6 @@ export async function GET(request: NextRequest) {
     // 获取客户数据和总数
     const [customers, totalCount] = await Promise.all([
       Customer.find(searchQuery)
-        .populate('salesRep', 'name')
         .sort(sortObj)
         .skip(skip)
         .limit(limit)

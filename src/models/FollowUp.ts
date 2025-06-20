@@ -13,12 +13,6 @@ const followUpSchema = new mongoose.Schema({
     ref: 'Customer',
     required: true,
   },
-  customerName: {
-    type: String,
-    required: true,
-  },
-  customerEmail: String,
-  customerPhone: String,
   
   // Assigned staff
   assignedToId: {
@@ -26,19 +20,9 @@ const followUpSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  assignedToName: {
-    type: String,
-    required: true,
-  },
-  
-  // Created by (who scheduled the follow-up)
   createdById: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-  },
-  createdByName: {
-    type: String,
     required: true,
   },
   
@@ -111,91 +95,14 @@ const followUpSchema = new mongoose.Schema({
     max: 5, // 1-5 rating scale
   },
   
+  // 简化跟进结果
   customerFeedback: String,
+  recommendations: String,
   
-  // Health-related tracking
-  healthStatus: {
-    currentCondition: String,
-    improvements: [String],
-    concerns: [String],
-    sideEffects: [String],
-  },
-  
-  // Product-related tracking
-  productUsage: [{
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
-    },
-    productName: String,
-    adherence: {
-      type: String,
-      enum: ['excellent', 'good', 'fair', 'poor'],
-    },
-    effectiveness: {
-      type: Number,
-      min: 1,
-      max: 5,
-    },
-    remainingQuantity: Number,
-    notes: String,
-  }],
-  
-  // Actions and recommendations
-  actionItems: [{
-    description: String,
-    dueDate: Date,
-    assignedTo: String,
-    priority: {
-      type: String,
-      enum: ['low', 'medium', 'high'],
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'in_progress', 'completed'],
-      default: 'pending',
-    },
-  }],
-  
-  recommendations: [String],
-  
-  // Follow-up scheduling
+  // 下次跟进
   nextFollowUpDate: Date,
-  nextFollowUpReason: String,
   
-  // Internal notes
-  internalNotes: String,
-  publicNotes: String, // Visible to customer
-  
-  // Attachments and files
-  attachments: [{
-    filename: String,
-    url: String,
-    uploadDate: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
-  
-  // Related records
-  relatedPurchaseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Purchase',
-  },
-  relatedPlanId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Plan',
-  },
-  
-  // Reminders
-  reminderSent: {
-    type: Boolean,
-    default: false,
-  },
-  reminderDate: Date,
-  
-  // Tags for categorization
-  tags: [String],
+  notes: String,
   
   isActive: {
     type: Boolean,
@@ -221,9 +128,7 @@ followUpSchema.pre('save', async function(next) {
   next();
 });
 
-// Add indexes for performance
-followUpSchema.index({ followUpId: 1 });
-followUpSchema.index({ customerId: 1 });
+// Add indexes for performance (followUpId already has unique index, customerId is in compound indexes below)
 followUpSchema.index({ assignedToId: 1 });
 followUpSchema.index({ scheduledDate: 1 });
 followUpSchema.index({ status: 1 });
@@ -236,13 +141,11 @@ followUpSchema.index({ assignedToId: 1, status: 1, scheduledDate: 1 });
 followUpSchema.index({ customerId: 1, status: 1 });
 followUpSchema.index({ status: 1, scheduledDate: 1 });
 
-// Add text index for search
+// 简化搜索索引
 followUpSchema.index({
   followUpId: 'text',
   title: 'text',
-  customerName: 'text',
   description: 'text',
-  customerFeedback: 'text',
 });
 
 export default mongoose.models.FollowUp || mongoose.model('FollowUp', followUpSchema);

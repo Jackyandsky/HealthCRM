@@ -11,7 +11,8 @@ import {
   ShoppingBagIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon
+  EyeIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline'
 
 interface Product {
@@ -180,13 +181,22 @@ export default function ProductsPage() {
                   管理USANA产品信息、库存和价格
                 </p>
               </div>
-              <Link
-                href="/dashboard/products/new"
-                className="btn btn-primary flex items-center"
-              >
-                <PlusIcon className="h-5 w-5 mr-2" />
-                添加产品
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/dashboard"
+                  className="btn btn-secondary flex items-center"
+                >
+                  <HomeIcon className="h-5 w-5 mr-2" />
+                  主控面板
+                </Link>
+                <Link
+                  href="/dashboard/products/new"
+                  className="btn btn-primary flex items-center"
+                >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  添加产品
+                </Link>
+              </div>
             </div>
           </div>
         </div>

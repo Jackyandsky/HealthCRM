@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import FollowUp from '@/models/FollowUp'
 import Customer from '@/models/Customer'
+import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -16,6 +17,10 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB()
+    
+    // Ensure all models are registered
+    User // This ensures User model is registered
+    Customer // This ensures Customer model is registered
     
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
@@ -81,10 +86,9 @@ export async function GET(request: NextRequest) {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('customerId', 'name email phone category')
-        .populate('assignedToId', 'name email department')
+        .populate('customerId', 'firstName lastName email phone customerType')
+        .populate('assignedToId', 'name email')
         .populate('createdById', 'name email')
-        .populate('productUsage.productId', 'productCode productName category')
         .lean(),
       FollowUp.countDocuments(filter)
     ])
@@ -166,6 +170,10 @@ export async function POST(request: NextRequest) {
 
     await connectDB()
     
+    // Ensure all models are registered
+    User
+    Customer
+    
     const body = await request.json()
     
     // Validate required fields
@@ -188,15 +196,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate followUp ID
+    const count = await FollowUp.countDocuments()
+    const year = new Date().getFullYear()
+    const month = String(new Date().getMonth() + 1).padStart(2, '0')
+    const followUpId = `FU${year}${month}${String(count + 1).padStart(4, '0')}`
+
     const followUpData = {
+      followUpId,
       customerId: body.customerId,
-      customerName: customer.name,
-      customerEmail: customer.email,
-      customerPhone: customer.phone,
       assignedToId: body.assignedToId || decoded.userId,
-      assignedToName: body.assignedToName || decoded.name || 'Admin',
       createdById: decoded.userId,
-      createdByName: decoded.name || 'Admin',
       title: body.title,
       description: body.description,
       type: body.type,
@@ -204,11 +214,7 @@ export async function POST(request: NextRequest) {
       scheduledDate: new Date(body.scheduledDate),
       scheduledTime: body.scheduledTime,
       communicationMethod: body.communicationMethod,
-      relatedPurchaseId: body.relatedPurchaseId,
-      relatedPlanId: body.relatedPlanId,
-      tags: body.tags || [],
-      publicNotes: body.publicNotes,
-      internalNotes: body.internalNotes,
+      notes: body.publicNotes || body.internalNotes || '',
     }
 
     const followUp = new FollowUp(followUpData)
@@ -216,8 +222,8 @@ export async function POST(request: NextRequest) {
 
     // Populate the created follow-up
     const populatedFollowUp = await FollowUp.findById(followUp._id)
-      .populate('customerId', 'name email phone category')
-      .populate('assignedToId', 'name email department')
+      .populate('customerId', 'firstName lastName email phone customerType')
+      .populate('assignedToId', 'name email')
       .populate('createdById', 'name email')
 
     return NextResponse.json({

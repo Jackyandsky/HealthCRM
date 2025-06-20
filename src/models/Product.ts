@@ -40,48 +40,21 @@ const productSchema = new mongoose.Schema({
   servingSize: String, // 服用剂量
   servingsPerContainer: Number, // 每瓶份数
   
-  // 适用人群
-  targetAudience: {
-    ageGroups: [String], // 年龄组
-    genders: [String], // 性别
-    healthGoals: [String], // 健康目标
-    lifestyles: [String], // 生活方式
-  },
-  
-  // 功效和好处
+  // 简化产品信息
   benefits: [String],
-  healthConcerns: [String], // 针对的健康问题
+  dosage: String,
+  instructions: String,
   
-  // 使用指导
-  recommendedDosage: String,
-  usageInstructions: String,
-  precautions: [String], // 注意事项
-  contraindications: [String], // 禁忌症
-  
-  // 价格信息
+  // 简化价格信息
   retailPrice: Number,
   wholesalePrice: Number,
-  preferredCustomerPrice: Number,
-  points: Number, // 积分值
+  preferredPrice: Number,
   
   // 库存状态
   stockStatus: {
     type: String,
-    enum: ['in_stock', 'low_stock', 'out_of_stock', 'discontinued'],
+    enum: ['in_stock', 'low_stock', 'out_of_stock'],
     default: 'in_stock',
-  },
-  
-  // 推荐搭配
-  recommendedCombinations: [{
-    productCode: String,
-    productName: String,
-    reason: String, // 搭配理由
-  }],
-  
-  // 销售数据
-  popularity: {
-    type: Number,
-    default: 0, // 受欢迎程度评分
   },
   
   isActive: {

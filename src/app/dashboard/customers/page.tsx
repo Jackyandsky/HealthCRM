@@ -32,11 +32,10 @@ interface Customer {
     _id: string
     name: string
   }
-  followUp: {
-    nextContactDate?: string
-    priority: string
-    lastContactDate?: string
-  }
+  nextContactDate?: string
+  lastContactDate?: string
+  contactFrequency?: string
+  customerValue?: number
   productUsage?: Array<{
     productName: string
     effectiveness?: number
@@ -214,14 +213,15 @@ export default function CustomersPage() {
     return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getCustomerValueColor = (value: number) => {
     const colors = {
-      low: 'bg-gray-100 text-gray-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800',
+      1: 'bg-gray-100 text-gray-800',
+      2: 'bg-blue-100 text-blue-800',
+      3: 'bg-yellow-100 text-yellow-800',
+      4: 'bg-orange-100 text-orange-800',
+      5: 'bg-red-100 text-red-800',
     }
-    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+    return colors[value as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
   const getStatusColor = (status: string) => {
@@ -233,11 +233,11 @@ export default function CustomersPage() {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
-  const isFollowUpDue = (date?: string) => {
+  const isContactDue = (date?: string) => {
     if (!date) return false
-    const followUpDate = new Date(date)
+    const contactDate = new Date(date)
     const today = new Date()
-    return followUpDate <= today
+    return contactDate <= today
   }
 
   const isProductLow = (productUsage?: Array<{effectiveness?: number}>) => {
@@ -472,11 +472,11 @@ export default function CustomersPage() {
                         </th>
                         <th 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('followUp.nextContactDate')}
+                          onClick={() => handleSort('nextContactDate')}
                         >
                           <div className="flex items-center space-x-1">
                             <span>回访日期</span>
-                            {sortField === 'followUp.nextContactDate' && (
+                            {sortField === 'nextContactDate' && (
                               sortOrder === 'asc' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
                             )}
                           </div>
@@ -527,18 +527,18 @@ export default function CustomersPage() {
                                 {customer.customerType === 'potential' ? '潜在' : customer.customerType === 'new' ? '新' : customer.customerType === 'regular' ? '常规' : customer.customerType === 'vip' ? 'VIP' : '非活跃'}
                               </span>
                               <br />
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(customer.followUp.priority)}`}>
-                                {customer.followUp.priority === 'low' ? '低' : customer.followUp.priority === 'medium' ? '中' : customer.followUp.priority === 'high' ? '高' : '紧急'}
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCustomerValueColor(customer.customerValue || 0)}`}>
+                                {customer.customerValue === 1 ? '⭐' : customer.customerValue === 2 ? '⭐⭐' : customer.customerValue === 3 ? '⭐⭐⭐' : customer.customerValue === 4 ? '⭐⭐⭐⭐' : customer.customerValue === 5 ? '⭐⭐⭐⭐⭐' : '-'}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
-                              {customer.followUp.nextContactDate ? (
-                                <div className={`flex items-center space-x-1 ${isFollowUpDue(customer.followUp.nextContactDate) ? 'text-red-600' : ''}`}>
+                              {customer.nextContactDate ? (
+                                <div className={`flex items-center space-x-1 ${isContactDue(customer.nextContactDate) ? 'text-red-600' : ''}`}>
                                   <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                                  <span>{formatDate(customer.followUp.nextContactDate)}</span>
-                                  {isFollowUpDue(customer.followUp.nextContactDate) && (
+                                  <span>{formatDate(customer.nextContactDate)}</span>
+                                  {isContactDue(customer.nextContactDate) && (
                                     <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
                                   )}
                                 </div>

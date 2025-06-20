@@ -24,10 +24,8 @@ export default function NewCustomerPage() {
     gender: '',
     customerType: 'potential',
     salesRep: '',
-    followUp: {
-      nextContactDate: '',
-      priority: 'medium',
-    },
+    nextContactDate: '',
+    contactFrequency: 'monthly',
     status: 'active',
     address: {
       street: '',
@@ -291,24 +289,23 @@ export default function NewCustomerPage() {
                   <label className="form-label">下次联系日期</label>
                   <input
                     type="date"
-                    name="followUp.nextContactDate"
+                    name="nextContactDate"
                     className="form-input"
-                    value={formData.followUp.nextContactDate}
+                    value={formData.nextContactDate}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label className="form-label">优先级</label>
+                  <label className="form-label">联系频率</label>
                   <select
-                    name="followUp.priority"
+                    name="contactFrequency"
                     className="form-input"
-                    value={formData.followUp.priority}
+                    value={formData.contactFrequency}
                     onChange={handleChange}
                   >
-                    <option value="low">低</option>
-                    <option value="medium">中</option>
-                    <option value="high">高</option>
-                    <option value="urgent">紧急</option>
+                    <option value="weekly">每周</option>
+                    <option value="monthly">每月</option>
+                    <option value="quarterly">每季度</option>
                   </select>
                 </div>
               </div>

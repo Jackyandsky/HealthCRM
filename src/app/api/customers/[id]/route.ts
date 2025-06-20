@@ -31,7 +31,6 @@ export async function GET(
     await connectDB()
 
     const customer = await Customer.findById(params.id)
-      .populate('salesRep', 'name employeeId')
 
     if (!customer) {
       return NextResponse.json(

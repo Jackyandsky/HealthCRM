@@ -16,7 +16,8 @@ import {
   TrashIcon,
   BellIcon,
   CalendarDaysIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  HomeIcon
 } from '@heroicons/react/24/outline'
 
 interface FollowUp {
@@ -227,6 +228,13 @@ export default function FollowUpsPage() {
                 </p>
               </div>
               <div className="flex items-center space-x-3">
+                <Link
+                  href="/dashboard"
+                  className="btn btn-secondary flex items-center"
+                >
+                  <HomeIcon className="h-5 w-5 mr-2" />
+                  仪表板
+                </Link>
                 <Link
                   href="/dashboard/follow-ups/reminders"
                   className="btn btn-secondary flex items-center"

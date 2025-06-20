@@ -45,133 +45,38 @@ const customerSchema = new mongoose.Schema({
     default: 'other',
   },
   
-  // 健康档案
+  // 简化健康档案
   healthProfile: {
-    height: Number, // cm
-    weight: Number, // kg
-    bmi: Number,
-    bloodType: String,
-    chronicConditions: [String], // 慢性疾病
-    allergies: [String], // 过敏史
-    currentMedications: [String], // 当前用药
-    healthGoals: [String], // 健康目标
-    dietaryRestrictions: [String], // 饮食限制
+    height: Number,
+    weight: Number,
+    allergies: [String],
+    medications: [String],
   },
   
-  // USANA产品使用情况
-  productUsage: [{
-    productName: String,
-    productCode: String,
-    startDate: Date,
-    endDate: Date,
-    dosage: String,
-    frequency: String,
-    purpose: String, // 使用目的
-    effectiveness: {
-      type: Number,
-      min: 1,
-      max: 5, // 1-5分效果评价
-    },
-    sideEffects: String,
-    willContinue: Boolean,
-    notes: String,
-  }],
+  // 简化产品使用记录 - 移除嵌套数组，使用关联
+  currentProducts: [String], // 当前使用的产品代码
   
-  // 购买历史
-  purchaseHistory: [{
-    orderDate: Date,
-    products: [{
-      productName: String,
-      productCode: String,
-      quantity: Number,
-      unitPrice: Number,
-      totalPrice: Number,
-    }],
-    totalAmount: Number,
-    paymentMethod: String,
-    orderStatus: {
-      type: String,
-      enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'],
-      default: 'pending',
-    },
-  }],
-  
-  // 沟通记录
-  communicationHistory: [{
-    date: Date,
-    type: {
-      type: String,
-      enum: ['phone', 'email', 'meeting', 'message', 'visit'],
-    },
-    purpose: {
-      type: String,
-      enum: ['consultation', 'follow_up', 'sales', 'support', 'complaint'],
-    },
-    content: String,
-    outcome: String,
-    nextAction: String,
-    contactedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-  }],
-  
-  // 跟进管理
-  followUp: {
-    nextContactDate: Date,
-    frequency: {
-      type: String,
-      enum: ['weekly', 'biweekly', 'monthly', 'quarterly', 'as_needed'],
-      default: 'monthly',
-    },
-    priority: {
-      type: String,
-      enum: ['low', 'medium', 'high', 'urgent'],
-      default: 'medium',
-    },
-    notes: String,
-    lastContactDate: Date,
-  },
-  
-  // 兴趣和需求
-  interests: {
-    productCategories: [String], // 感兴趣的产品类别
-    healthConcerns: [String], // 健康关注点
-    budgetRange: {
-      type: String,
-      enum: ['under_500', '500_1000', '1000_2000', '2000_5000', 'over_5000'],
-    },
-    purchaseFrequency: {
-      type: String,
-      enum: ['monthly', 'quarterly', 'semi_annually', 'annually', 'irregular'],
-    },
-  },
-  
-  // 地址信息
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String,
-  },
-  
-  // 状态管理
-  status: {
+  // 简化跟进管理
+  nextContactDate: Date,
+  lastContactDate: Date,
+  contactFrequency: {
     type: String,
-    enum: ['active', 'inactive', 'blocked'],
-    default: 'active',
+    enum: ['weekly', 'monthly', 'quarterly'],
+    default: 'monthly',
   },
   
-  // 评分和标签
+  // 简化地址
+  city: String,
+  
+  // 客户评分
   customerValue: {
     type: Number,
     min: 1,
-    max: 5, // 客户价值评分
+    max: 5,
     default: 3,
   },
-  tags: [String], // 自定义标签
-  notes: String, // 备注
+  
+  notes: String,
   
   isActive: {
     type: Boolean,
@@ -181,13 +86,12 @@ const customerSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// 添加索引
+// 简化索引
 customerSchema.index({ customerId: 1 });
 customerSchema.index({ email: 1 });
 customerSchema.index({ phone: 1 });
 customerSchema.index({ salesRep: 1 });
 customerSchema.index({ customerType: 1 });
-customerSchema.index({ 'followUp.nextContactDate': 1 });
-customerSchema.index({ 'followUp.priority': 1 });
+customerSchema.index({ nextContactDate: 1 });
 
 export default mongoose.models.Customer || mongoose.model('Customer', customerSchema);

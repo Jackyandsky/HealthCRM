@@ -22,13 +22,9 @@ interface Customer {
     _id: string
     name?: string
   }
-  followUp: {
-    nextContactDate?: string
-    priority: string
-    lastContactDate?: string
-    frequency?: string
-    notes?: string
-  }
+  nextContactDate?: string
+  lastContactDate?: string
+  contactFrequency?: string
   healthProfile?: {
     height?: number
     weight?: number
@@ -82,12 +78,9 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
     gender: '',
     customerType: 'potential',
     salesRep: '', // Stores the ID of the salesRep
-    followUp: {
-      nextContactDate: '',
-      priority: 'medium',
-      frequency: 'monthly',
-      notes: '',
-    },
+    nextContactDate: '',
+    lastContactDate: '',
+    contactFrequency: 'monthly',
     status: 'active',
     address: {
       street: '',
@@ -183,13 +176,11 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
           gender: customerData.gender || '',
           customerType: customerData.customerType || 'potential',
           salesRep: customerData.salesRep?._id || '',
-          followUp: {
-            nextContactDate: customerData.followUp?.nextContactDate ? 
-              new Date(customerData.followUp.nextContactDate).toISOString().split('T')[0] : '',
-            priority: customerData.followUp?.priority || 'medium',
-            frequency: customerData.followUp?.frequency || 'monthly',
-            notes: customerData.followUp?.notes || '',
-          },
+          nextContactDate: customerData.nextContactDate ? 
+            new Date(customerData.nextContactDate).toISOString().split('T')[0] : '',
+          lastContactDate: customerData.lastContactDate ? 
+            new Date(customerData.lastContactDate).toISOString().split('T')[0] : '',
+          contactFrequency: customerData.contactFrequency || 'monthly',
           status: customerData.status || 'active',
           address: {
             street: customerData.address?.street || '',
@@ -261,11 +252,9 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
         dateOfBirth: formData.dateOfBirth.trim() === '' ? undefined : formData.dateOfBirth,
         gender: formData.gender.trim() === '' ? undefined : formData.gender,
         salesRep: formData.salesRep.trim() === '' ? undefined : formData.salesRep,
-        followUp: {
-            ...formData.followUp,
-            nextContactDate: formData.followUp.nextContactDate.trim() === '' ? undefined : formData.followUp.nextContactDate,
-            notes: formData.followUp.notes.trim() === '' ? undefined : formData.followUp.notes,
-        },
+        nextContactDate: formData.nextContactDate.trim() === '' ? undefined : formData.nextContactDate,
+        lastContactDate: formData.lastContactDate.trim() === '' ? undefined : formData.lastContactDate,
+        contactFrequency: formData.contactFrequency,
         address: {
             ...formData.address,
             street: formData.address.street.trim() === '' ? undefined : formData.address.street,
@@ -565,60 +554,43 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
             </div>
 
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">跟进管理</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">联系管理</h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="followUp.nextContactDate" className="form-label">下次联系日期</label>
+                  <label htmlFor="nextContactDate" className="form-label">下次联系日期</label>
                   <input
-                    id="followUp.nextContactDate"
+                    id="nextContactDate"
                     type="date"
-                    name="followUp.nextContactDate"
+                    name="nextContactDate"
                     className="form-input"
-                    value={formData.followUp.nextContactDate}
+                    value={formData.nextContactDate}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label htmlFor="followUp.priority" className="form-label">优先级</label>
-                  <select
-                    id="followUp.priority"
-                    name="followUp.priority"
+                  <label htmlFor="lastContactDate" className="form-label">最后联系日期</label>
+                  <input
+                    id="lastContactDate"
+                    type="date"
+                    name="lastContactDate"
                     className="form-input"
-                    value={formData.followUp.priority}
+                    value={formData.lastContactDate}
                     onChange={handleChange}
-                  >
-                    <option value="low">低</option>
-                    <option value="medium">中</option>
-                    <option value="high">高</option>
-                    <option value="urgent">紧急</option>
-                  </select>
+                  />
                 </div>
-                <div>
-                  <label htmlFor="followUp.frequency" className="form-label">联系频率</label>
+                <div className="sm:col-span-2">
+                  <label htmlFor="contactFrequency" className="form-label">联系频率</label>
                   <select
-                    id="followUp.frequency"
-                    name="followUp.frequency"
+                    id="contactFrequency"
+                    name="contactFrequency"
                     className="form-input"
-                    value={formData.followUp.frequency}
+                    value={formData.contactFrequency}
                     onChange={handleChange}
                   >
                     <option value="weekly">每周</option>
-                    <option value="biweekly">双周</option>
                     <option value="monthly">每月</option>
                     <option value="quarterly">每季度</option>
-                    <option value="as_needed">按需</option>
                   </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="followUp.notes" className="form-label">跟进备注</label>
-                  <textarea
-                    id="followUp.notes"
-                    name="followUp.notes"
-                    rows={3}
-                    className="form-input"
-                    value={formData.followUp.notes}
-                    onChange={handleChange}
-                  />
                 </div>
               </div>
             </div>

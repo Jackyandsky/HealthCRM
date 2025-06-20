@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import FollowUp from '@/models/FollowUp'
+import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -15,6 +16,9 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDB()
+    
+    // Ensure models are registered
+    User
     
     const searchParams = request.nextUrl.searchParams
     const reminderType = searchParams.get('type') || 'upcoming' // upcoming, overdue, today
@@ -60,8 +64,8 @@ export async function GET(request: NextRequest) {
 
     const followUps = await FollowUp.find(filter)
       .sort({ scheduledDate: 1, priority: -1 })
-      .populate('customerId', 'name email phone category')
-      .populate('assignedToId', 'name email department')
+      .populate('customerId', 'firstName lastName email phone customerType')
+      .populate('assignedToId', 'name email')
       .lean()
 
     // Group by priority for better organization
@@ -111,6 +115,9 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB()
+    
+    // Ensure models are registered
+    User
     
     const body = await request.json()
     const { followUpIds, action, reminderDate } = body

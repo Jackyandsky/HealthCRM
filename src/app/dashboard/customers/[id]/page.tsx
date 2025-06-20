@@ -33,13 +33,9 @@ interface Customer {
     _id: string
     name: string
   }
-  followUp: {
-    nextContactDate?: string
-    priority: string
-    lastContactDate?: string
-    frequency?: string
-    notes?: string
-  }
+  nextContactDate?: string
+  lastContactDate?: string
+  contactFrequency?: string
   healthProfile?: {
     height?: number
     weight?: number
@@ -230,14 +226,13 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
     return colors[type] || 'bg-gray-100 text-gray-800'
   }
 
-  const getPriorityColor = (priority: string) => {
-    const colors: Record<string, string> = { // Added type
-      low: 'bg-gray-100 text-gray-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800',
+  const getContactFrequencyName = (frequency: string) => {
+    const names: Record<string, string> = {
+      weekly: '每周',
+      monthly: '每月',
+      quarterly: '每季度',
     }
-    return colors[priority] || 'bg-gray-100 text-gray-800'
+    return names[frequency] || frequency
   }
 
   const getStatusColor = (status: string) => {
@@ -260,15 +255,6 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
     return names[type] || type
   }
 
-  const getPriorityName = (priority: string) => {
-    const names: Record<string, string> = { // Added type
-      low: '低',
-      medium: '中',
-      high: '高',
-      urgent: '紧急',
-    }
-    return names[priority] || priority
-  }
 
   const getStatusName = (status: string) => {
     const names: Record<string, string> = { // Added type
@@ -279,14 +265,14 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
     return names[status] || status
   }
 
-  const isFollowUpDue = (date?: string) => {
+  const isContactDue = (date?: string) => {
     if (!date) return false
-    const followUpDate = new Date(date)
+    const contactDate = new Date(date)
     const today = new Date()
-    // Set time to 00:00:00 for today to compare dates accurately if followUpDate is just a date
+    // Set time to 00:00:00 for today to compare dates accurately if contactDate is just a date
     today.setHours(0, 0, 0, 0); 
-    followUpDate.setHours(0,0,0,0); // Assuming nextContactDate is a date without time
-    return followUpDate <= today
+    contactDate.setHours(0,0,0,0); // Assuming nextContactDate is a date without time
+    return contactDate <= today
   }
 
   const canEditCustomer = () => {
@@ -645,19 +631,19 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
 
             {/* 右侧信息 */}
             <div className="space-y-6">
-              {/* 跟进信息 */}
+              {/* 联系信息 */}
               <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">跟进信息</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">联系信息</h3>
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
                     <ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">下次联系日期</p>
-                      {customer.followUp.nextContactDate ? (
-                        <div className={`flex items-center space-x-2 ${isFollowUpDue(customer.followUp.nextContactDate) ? 'text-red-600' : 'text-gray-900'}`}>
-                          <p className="font-medium">{formatDate(customer.followUp.nextContactDate)}</p>
-                          {isFollowUpDue(customer.followUp.nextContactDate) && (
-                            <ExclamationTriangleIcon className="h-4 w-4 text-red-500" title="跟进日期已到或已过" />
+                      {customer.nextContactDate ? (
+                        <div className={`flex items-center space-x-2 ${isContactDue(customer.nextContactDate) ? 'text-red-600' : 'text-gray-900'}`}>
+                          <p className="font-medium">{formatDate(customer.nextContactDate)}</p>
+                          {isContactDue(customer.nextContactDate) && (
+                            <ExclamationTriangleIcon className="h-4 w-4 text-red-500" title="联系日期已到或已过" />
                           )}
                         </div>
                       ) : (
@@ -666,25 +652,13 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">优先级</p>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(customer.followUp.priority)}`}>
-                      {getPriorityName(customer.followUp.priority)}
-                    </span>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-500">最后联系</p>
-                    <p className="font-medium text-gray-900">{formatDate(customer.followUp.lastContactDate)}</p>
+                    <p className="font-medium text-gray-900">{formatDate(customer.lastContactDate)}</p>
                   </div>
-                  {customer.followUp.frequency && (
+                  {customer.contactFrequency && (
                     <div>
                       <p className="text-sm text-gray-500">联系频率</p>
-                      <p className="font-medium text-gray-900">{customer.followUp.frequency}</p>
-                    </div>
-                  )}
-                  {customer.followUp.notes && (
-                    <div>
-                      <p className="text-sm text-gray-500">跟进备注</p>
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap">{customer.followUp.notes}</p> {/* Added whitespace-pre-wrap */}
+                      <p className="font-medium text-gray-900">{getContactFrequencyName(customer.contactFrequency)}</p>
                     </div>
                   )}
                 </div>
