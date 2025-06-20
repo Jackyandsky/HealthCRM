@@ -120,3 +120,21 @@ jspm_packages/
 .tern-port
 process.txt
 package-lock.json
+
+# Added by Task Master AI
+dev-debug.log
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Added by Task Master AI
+# Task files
+tasks.json
+tasks/ 

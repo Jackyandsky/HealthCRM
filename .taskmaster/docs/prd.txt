@@ -1,0 +1,264 @@
+# HealthCRM - Customer Health & Consumption Management System PRD
+
+## Project Overview
+A comprehensive Customer Relationship Management (CRM) system designed specifically for health supplement businesses, particularly focused on USANA products. The system enables health consultants and administrators to manage customer information, track health plans, monitor supplement consumption, record follow-ups, and optimize customer health outcomes.
+
+## Core Objectives
+1. **Customer Management**: Centralized customer database with health profiles, consumption tracking, and personalized supplement plans
+2. **Health Plan Management**: Create, assign, and monitor personalized supplement plans based on customer health conditions
+3. **Consumption Tracking**: Monitor supplement usage, stock levels, and provide automated alerts for refills
+4. **Follow-up System**: Systematic customer follow-up workflow with feedback collection and health progress tracking
+5. **Sales Analytics**: Dashboard with sales metrics, customer insights, and business intelligence
+6. **Public Product Showcase**: Customer-facing product catalog for USANA supplements
+
+## Technical Architecture
+- **Frontend**: Next.js 14 with App Router, TypeScript, shadcn/ui components, Tailwind CSS
+- **Backend**: Next.js API Routes with Node.js environment
+- **Database**: MongoDB Atlas with comprehensive schemas for users, products, plans, purchases, and follow-ups
+- **Authentication**: Role-based access control (System Admin, Admin/User, Customer)
+- **Deployment**: Vercel-ready with environment configuration
+
+## Core Features & Requirements
+
+### 1. Dashboard Module
+**Priority**: High
+**Description**: Central command center for admins and system administrators
+**Requirements**:
+- Key metrics display (total sales, customer count, new customer acquisitions)
+- Alert system for low supplement inventory (< 20% remaining)
+- Follow-up reminder system (overdue customer check-ins)
+- Sales analytics with charts and trend visualization
+- Task management for daily activities
+- Real-time notifications for critical alerts
+
+### 2. Customer Information Management (CRM)
+**Priority**: High
+**Description**: Comprehensive customer profile management system
+**Requirements**:
+- Customer CRUD operations with detailed health profiles
+- Dynamic tagging and categorization system
+- Advanced filtering and sorting capabilities
+- Customer timeline view showing:
+  - Purchase history chronology
+  - Supplement plan history and modifications
+  - Health feedback and follow-up records
+- Customer search functionality
+- Data export capabilities
+- Customer communication preferences
+
+### 3. Product Management (USANA Supplements)
+**Priority**: High
+**Description**: Comprehensive product catalog management
+**Requirements**:
+- Product CRUD operations with detailed information
+- Product categorization and organization
+- Image management with URL support
+- Inventory tracking and low-stock alerts
+- Product pricing and specifications
+- Product search and filtering
+- Integration with plan templates
+- Public product showcase functionality
+
+### 4. Supplement Plan Management
+**Priority**: High
+**Description**: Personalized health plan creation and management system
+**Requirements**:
+- Plan template creation for common health conditions
+- Customer-specific plan customization and assignment
+- Dosage and frequency specifications
+- Plan duration and timeline management
+- Plan sharing capabilities with customers
+- Usage tracking and progress monitoring
+- Plan modification and versioning
+- Integration with purchase tracking
+
+### 5. Purchase Record Management
+**Priority**: High
+**Description**: Comprehensive purchase tracking and analytics
+**Requirements**:
+- Purchase logging with detailed item information
+- Customer purchase history tracking
+- Order management and status tracking
+- Payment status monitoring
+- Purchase analytics and reporting
+- Integration with supplement consumption calculations
+- Automated inventory updates
+- Receipt and invoice generation
+
+### 6. Follow-up Record Management
+**Priority**: High
+**Description**: Systematic customer follow-up and feedback system
+**Requirements**:
+- Follow-up scheduling and reminder system
+- Communication method tracking (phone, email, in-person, etc.)
+- Detailed conversation logging
+- Customer feedback collection and analysis
+- Health progress tracking
+- Action item management
+- Follow-up analytics and trends
+- Integration with customer timeline
+
+### 7. Public Product Showcase
+**Priority**: Medium
+**Description**: Customer-facing product catalog and information portal
+**Requirements**:
+- Public product listing with search and filtering
+- Product categorization and browsing
+- Detailed product information pages
+- Responsive design for mobile access
+- Contact information for inquiries
+- SEO optimization for product discovery
+- Integration with main CRM system
+
+### 8. User & Permission Management
+**Priority**: High
+**Description**: Role-based access control and user management
+**Requirements**:
+- Three-tier role system:
+  - System Administrator: Full system access, user creation, all data management
+  - Administrator/User: Customer management, plan creation, sales tracking
+  - Customer: Personal profile access, plan viewing, purchase history
+- User registration and authentication
+- Permission-based feature access
+- Data isolation between administrators
+- Customer assignment to administrators
+- Profile management and preferences
+
+### 9. Advanced Analytics & Reporting
+**Priority**: Medium
+**Description**: Business intelligence and analytics dashboard
+**Requirements**:
+- Sales performance analytics
+- Customer health outcome tracking
+- Supplement effectiveness analysis
+- Revenue forecasting and trends
+- Customer lifetime value calculations
+- Plan effectiveness metrics
+- Follow-up efficiency analysis
+- Customizable reporting system
+
+### 10. System Configuration & Settings
+**Priority**: Medium
+**Description**: System-wide configuration and customization
+**Requirements**:
+- Tag and category management
+- System notification settings
+- Alert threshold configuration
+- Email template customization
+- System backup and data export
+- API configuration and integration settings
+- Localization support (English/Chinese)
+
+## User Stories
+
+### System Administrator
+- As a system administrator, I want to view comprehensive business analytics so I can make informed decisions about product offerings and customer strategies
+- As a system administrator, I want to manage all users and assign customers to administrators so I can maintain proper data organization
+- As a system administrator, I want to configure system-wide settings so I can customize the platform for business needs
+
+### Administrator/User
+- As an administrator, I want to create and assign personalized supplement plans so I can provide targeted health solutions for my customers
+- As an administrator, I want to track customer supplement consumption so I can provide timely refill reminders and health monitoring
+- As an administrator, I want to schedule and record follow-ups so I can maintain regular communication and track customer progress
+- As an administrator, I want to view dashboard alerts so I can prioritize daily tasks and customer needs
+
+### Customer
+- As a customer, I want to view my personalized supplement plan so I can follow my health regimen correctly
+- As a customer, I want to see my purchase history so I can track my spending and reorder products
+- As a customer, I want to provide feedback during follow-ups so my health consultant can adjust my plan as needed
+- As a customer, I want to browse available products so I can learn about new supplement options
+
+## Technical Requirements
+
+### Database Schema
+- Users collection with role-based access control
+- Products collection with detailed supplement information
+- Plans and Plan Templates collections for health plan management
+- Purchase Logs collection for transaction tracking
+- Follow-ups collection for customer communication records
+- Tags and Categories collections for dynamic organization
+
+### API Endpoints
+- Authentication and authorization endpoints
+- RESTful APIs for all major entities (users, products, plans, purchases, follow-ups)
+- Real-time notification endpoints
+- Analytics and reporting endpoints
+- File upload and management endpoints
+
+### Security Requirements
+- JWT-based authentication
+- Role-based access control
+- Data validation and sanitization
+- Secure password hashing
+- API rate limiting
+- HTTPS enforcement
+
+### Performance Requirements
+- Page load times under 3 seconds
+- Database queries optimized with proper indexing
+- Responsive design for mobile and desktop
+- Efficient image loading and caching
+- Scalable architecture for user growth
+
+## Success Metrics
+- User adoption rate across all role types
+- Customer satisfaction scores from follow-up records
+- Average time to complete daily administrative tasks
+- System uptime and performance metrics
+- Data accuracy and consistency measurements
+- Business growth indicators (sales, customer retention, plan effectiveness)
+
+## Implementation Phases
+
+### Phase 1: Core Infrastructure (Weeks 1-2)
+- Database schema implementation
+- Authentication system setup
+- Basic user management
+- Core API endpoints
+
+### Phase 2: Customer & Product Management (Weeks 3-4)
+- Customer CRUD operations
+- Product management system
+- Basic dashboard implementation
+- Tag and category system
+
+### Phase 3: Plan & Purchase Management (Weeks 5-6)
+- Plan template creation and management
+- Customer plan assignment
+- Purchase tracking system
+- Consumption calculation algorithms
+
+### Phase 4: Follow-up & Analytics (Weeks 7-8)
+- Follow-up scheduling and recording
+- Dashboard analytics and alerts
+- Reporting system implementation
+- Timeline and progress tracking
+
+### Phase 5: Public Interface & Polish (Weeks 9-10)
+- Public product showcase
+- UI/UX refinements
+- Performance optimization
+- Testing and bug fixes
+
+### Phase 6: Advanced Features & Deployment (Weeks 11-12)
+- Advanced analytics and reporting
+- System configuration options
+- Final testing and quality assurance
+- Production deployment and monitoring
+
+## Risk Assessment
+- **Data Privacy**: Handling sensitive health information requires robust security measures
+- **Complex Business Logic**: Supplement consumption calculations and plan management require careful algorithm design
+- **User Experience**: Multiple user roles require intuitive interface design for different technical skill levels
+- **Integration Complexity**: Coordinating between customer plans, purchases, and follow-ups requires careful data modeling
+- **Scalability**: System must handle growing customer base and increasing data volumes
+
+## Definition of Done
+- All core features implemented and tested
+- Role-based access control fully functional
+- Dashboard provides real-time insights and alerts
+- Customer timeline accurately reflects all interactions
+- Public product showcase is functional and responsive
+- System performance meets specified requirements
+- Documentation complete for users and administrators
+- Production deployment successful with monitoring in place

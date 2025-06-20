@@ -363,6 +363,13 @@ export default function CustomerDetailsPage({ params }: { params: { id: string }
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Link
+                href={`/dashboard/customers/${customer._id}/health-profile`}
+                className="btn btn-primary flex items-center space-x-2"
+              >
+                <HeartIcon className="h-5 w-5" />
+                <span>健康档案</span>
+              </Link>
               {canEditCustomer() && (
                 <Link
                   href={`/dashboard/customers/${customer._id}/edit`}
