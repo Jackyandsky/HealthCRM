@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb'
 import Purchase from '@/models/Purchase'
 import { verifyToken } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const decoded = verifyToken(request)

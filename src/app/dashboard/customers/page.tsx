@@ -10,13 +10,13 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  ArrowLeftIcon,
   FunnelIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ChatBubbleLeftRightIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 
 interface Customer {
   _id: string
@@ -264,32 +264,20 @@ export default function CustomersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="p-2 text-gray-400 hover:text-gray-500"
-              >
-                <ArrowLeftIcon className="h-6 w-6" />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">客户管理</h1>
-                <p className="text-sm text-gray-500">管理客户信息和健康档案</p>
-              </div>
-            </div>
-            <Link
-              href="/dashboard/customers/new"
-              className="btn btn-primary flex items-center space-x-2"
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>添加客户</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader
+        title="客户管理"
+        description="管理客户信息和健康档案"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <Link
+          href="/dashboard/customers/new"
+          className="btn btn-primary flex items-center space-x-2"
+        >
+          <PlusIcon className="h-5 w-5" />
+          <span>添加客户</span>
+        </Link>
+      </DashboardHeader>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">

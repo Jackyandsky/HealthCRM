@@ -4,6 +4,8 @@ import connectDB from '@/lib/mongodb'
 import Customer from '@/models/Customer'
 import User from '@/models/User'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Verify JWT token

@@ -15,6 +15,7 @@ import {
   DocumentTextIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 import type { Purchase } from '@/lib/types'
 
 interface PurchasesSummary {
@@ -155,37 +156,20 @@ export default function PurchasesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">销售记录</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  管理客户购买记录和销售数据
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <ChartBarIcon className="h-5 w-5 mr-2" />
-                  主控台
-                </Link>
-                <Link
-                  href="/dashboard/purchases/new"
-                  className="btn btn-primary flex items-center"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  新增订单
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="销售记录"
+        description="管理客户购买记录和销售数据"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <Link
+          href="/dashboard/purchases/new"
+          className="btn btn-primary flex items-center"
+        >
+          <PlusIcon className="h-5 w-5 mr-2" />
+          新增订单
+        </Link>
+      </DashboardHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}

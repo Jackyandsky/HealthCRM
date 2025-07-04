@@ -7,18 +7,13 @@ import {
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  ChatBubbleLeftRightIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
   BellIcon,
-  CalendarDaysIcon,
-  ChartBarIcon,
-  HomeIcon
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 
 interface FollowUp {
   _id: string
@@ -43,13 +38,7 @@ interface FollowUp {
   createdAt: string
 }
 
-interface FollowUpSummary {
-  totalFollowUps: number
-  completedCount: number
-  scheduledCount: number
-  overdueCount: number
-  averageRating: number
-}
+
 
 const FOLLOW_UP_TYPES = [
   { value: 'health_check', label: '健康检查' },
@@ -91,13 +80,6 @@ const COMMUNICATION_METHODS = [
 
 export default function FollowUpsPage() {
   const [followUps, setFollowUps] = useState<FollowUp[]>([])
-  const [summary, setSummary] = useState<FollowUpSummary>({
-    totalFollowUps: 0,
-    completedCount: 0,
-    scheduledCount: 0,
-    overdueCount: 0,
-    averageRating: 0,
-  })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -150,7 +132,6 @@ export default function FollowUpsPage() {
         setFollowUps(data.data.followUps)
         setTotalPages(data.data.pagination.totalPages)
         setTotalCount(data.data.pagination.totalCount)
-        setSummary(data.data.summary)
       }
     } catch (error) {
       console.error('Error loading follow-ups:', error)
@@ -216,155 +197,36 @@ export default function FollowUpsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">回访管理</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  客户回访计划和反馈记录管理
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <HomeIcon className="h-5 w-5 mr-2" />
-                  仪表板
-                </Link>
-                <Link
-                  href="/dashboard/follow-ups/reminders"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <BellIcon className="h-5 w-5 mr-2" />
-                  提醒管理
-                </Link>
-                <Link
-                  href="/dashboard/follow-ups/analytics"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <ChartBarIcon className="h-5 w-5 mr-2" />
-                  回访分析
-                </Link>
-                <Link
-                  href="/dashboard/follow-ups/new"
-                  className="btn btn-primary flex items-center"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  新增回访
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="回访管理"
+        description="客户回访计划和反馈记录管理"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <Link
+          href="/dashboard/follow-ups/reminders"
+          className="btn btn-secondary flex items-center"
+        >
+          <BellIcon className="h-5 w-5 mr-2" />
+          提醒管理
+        </Link>
+        <Link
+          href="/dashboard/follow-ups/analytics"
+          className="btn btn-secondary flex items-center"
+        >
+          <ChartBarIcon className="h-5 w-5 mr-2" />
+          回访分析
+        </Link>
+        <Link
+          href="/dashboard/follow-ups/new"
+          className="btn btn-primary flex items-center"
+        >
+          <PlusIcon className="h-5 w-5 mr-2" />
+          新增回访
+        </Link>
+      </DashboardHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ChatBubbleLeftRightIcon className="h-6 w-6 text-blue-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      总回访数
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.totalFollowUps}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CalendarDaysIcon className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      待回访
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.scheduledCount}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      逾期回访
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.overdueCount}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      已完成
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.completedCount}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ClockIcon className="h-6 w-6 text-indigo-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      满意度
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {summary.averageRating ? `${summary.averageRating.toFixed(1)}/5` : 'N/A'}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Filters */}
         <div className="bg-white shadow rounded-lg mb-6">

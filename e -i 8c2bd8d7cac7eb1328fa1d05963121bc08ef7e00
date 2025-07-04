@@ -1,0 +1,99 @@
+[33mcommit 98b12857988725cdcf480274fe39f2d9fe6d5ab3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri Jun 20 22:52:32 2025 -0700
+
+    finished the essential functionalities
+
+[33mcommit 6a08359ca8bc2e599268b580a5993eddbde936c4[m
+Author: root <root@DESKTOP-7DKCHHA.localdomain>
+Date:   Fri Jun 20 15:00:28 2025 -0700
+
+    Fix health plan model and API routes
+    
+    - Updated HealthPlan model to include comprehensive schema matching frontend expectations
+    - Fixed API route authorization to allow all authenticated users
+    - Updated populate fields and response structure
+    - Fixed data type handling in edit page for BMI calculation
+    - Ensured all required nested objects are initialized with defaults
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+[33mcommit 18efbb127511156f2957518959159112c97a5933[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Thu Jun 19 23:14:38 2025 -0700
+
+    implement initial
+
+[33mcommit 8c2bd8d7cac7eb1328fa1d05963121bc08ef7e00[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 22:55:35 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit ee963c43e581f1901898cb746ea5d12659c83f90[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 22:46:32 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit 9b1c35f84ace1517114ac104c0e79ee0703c766a[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 22:27:24 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit d89dbdbc735049b0b5ce61f5f90d019f2be72d57[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 22:20:34 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit 3d14f362b0095502bcfc48a925b7df113e3cf0ad[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 22:03:13 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit a5f1d801ec4eba856b0556acd82c760224a65942[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 21:59:30 2025 -0700
+
+    fix bugs error.message
+
+[33mcommit d535b0e3e7bf5a279ff326fa5f5e6321525c4fda[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 21:55:16 2025 -0700
+
+    fix bugs error.code = 11000
+
+[33mcommit f52165878fc08a57a370f529b981426302744ac7[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 21:51:17 2025 -0700
+
+    fix bugs
+
+[33mcommit 062652d9408ec0cb2603da8261fe0ecf2083ac79[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 21:38:27 2025 -0700
+
+    fix bugs
+
+[33mcommit 4c7cc3fbbc807f0016db1ed428c1df4e7f4af8dd[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 21:24:38 2025 -0700
+
+    constomer CRUD
+
+[33mcommit a18c77172a84fbe1a7727178cb782365308ba90c[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 15:52:36 2025 -0700
+
+    Initial commit
+
+[33mcommit a911a1a47434decfd30ce41be567ec52b03b775c[m
+Author: Jackyandsky <114648314+Jackyandsky@users.noreply.github.com>
+Date:   Fri May 23 15:28:24 2025 -0700
+
+    Initial commit

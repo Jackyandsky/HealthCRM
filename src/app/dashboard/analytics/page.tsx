@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeftIcon,
   ChartBarIcon,
   CurrencyDollarIcon,
   UserGroupIcon,
@@ -18,8 +17,10 @@ import {
   StarIcon,
   CheckCircleIcon,
   ClockIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 
 interface AnalyticsData {
   overview: {
@@ -103,23 +104,17 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [timeRange, setTimeRange] = useState('30')
   const [error, setError] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('')
+  const [customers, setCustomers] = useState<Array<{_id: string, firstName: string, lastName: string, customerId: string}>>([])
+  const [customerTimeline, setCustomerTimeline] = useState<Array<any>>([])
+  const [timelineLoading, setTimelineLoading] = useState(false)
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/auth/login')
-      return
-    }
-    
-    loadAnalyticsData()
-  }, [router, timeRange])
-
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
       const token = localStorage.getItem('token')
-      
+
       const response = await fetch(`/api/analytics/dashboard?timeRange=${timeRange}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -139,7 +134,103 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
+
+  const loadCustomers = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/customers?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setCustomers(result.customers || [])
+      } else {
+        console.error('Failed to load customers:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error)
+    }
+  }, [])
+
+  const loadCustomerTimeline = useCallback(async () => {
+    if (!selectedCustomer) return
+
+    try {
+      setTimelineLoading(true)
+      const token = localStorage.getItem('token')
+
+      // Load customer activities from multiple endpoints
+      const [purchasesRes, followUpsRes, plansRes] = await Promise.all([
+        fetch(`/api/purchases?customerId=${selectedCustomer}&limit=50`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`/api/follow-ups?customerId=${selectedCustomer}&limit=50`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`/api/health-plans?customerId=${selectedCustomer}&limit=50`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ])
+
+      const [purchases, followUps, plans] = await Promise.all([
+        purchasesRes.ok ? purchasesRes.json() : { data: { purchases: [] } },
+        followUpsRes.ok ? followUpsRes.json() : { data: { followUps: [] } },
+        plansRes.ok ? plansRes.json() : { data: { plans: [] } }
+      ])
+
+      // Combine and sort timeline events
+      const timeline = [
+        ...(purchases.data.purchases || []).map((item: any) => ({
+          ...item,
+          type: 'purchase',
+          date: item.orderDate,
+          title: `购买订单 ${item.purchaseId}`,
+          description: `总金额: ¥${item.totalAmount}`
+        })),
+        ...(followUps.data.followUps || []).map((item: any) => ({
+          ...item,
+          type: 'follow_up',
+          date: item.scheduledDate,
+          title: `回访: ${item.title}`,
+          description: item.description || '客户回访记录'
+        })),
+        ...(plans.data.plans || []).map((item: any) => ({
+          ...item,
+          type: 'health_plan',
+          date: item.createdAt,
+          title: `健康计划: ${item.title}`,
+          description: item.description || '健康计划创建'
+        }))
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+      setCustomerTimeline(timeline)
+    } catch (error) {
+      console.error('Error loading customer timeline:', error)
+    } finally {
+      setTimelineLoading(false)
+    }
+  }, [selectedCustomer])
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      router.push('/auth/login')
+      return
+    }
+
+    loadAnalyticsData()
+    loadCustomers()
+  }, [router, timeRange, loadAnalyticsData, loadCustomers])
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      loadCustomerTimeline()
+    }
+  }, [selectedCustomer, loadCustomerTimeline])
 
   const formatCurrency = (amount: number) => {
     return `¥${amount.toLocaleString()}`
@@ -179,16 +270,12 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center">
-              <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 mr-4">
-                <ArrowLeftIcon className="h-6 w-6" />
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">数据分析</h1>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader
+          title="数据分析"
+          description="业务数据统计和趋势分析"
+          backHref="/dashboard"
+          showDashboardLink={false}
+        />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
@@ -219,47 +306,29 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-400 hover:text-gray-600 mr-4"
-                >
-                  <ArrowLeftIcon className="h-6 w-6" />
-                </Link>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">数据分析</h1>
-                  <p className="mt-1 text-sm text-gray-600">
-                    业务数据统计和趋势分析
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <select
-                  className="input"
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                >
-                  <option value="7">最近7天</option>
-                  <option value="30">最近30天</option>
-                  <option value="90">最近90天</option>
-                  <option value="365">最近1年</option>
-                </select>
-                <button
-                  onClick={loadAnalyticsData}
-                  className="btn btn-primary"
-                >
-                  刷新数据
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="数据分析"
+        description="业务数据统计和趋势分析"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <select
+          className="input"
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+        >
+          <option value="7">最近7天</option>
+          <option value="30">最近30天</option>
+          <option value="90">最近90天</option>
+          <option value="365">最近1年</option>
+        </select>
+        <button
+          onClick={loadAnalyticsData}
+          className="btn btn-primary"
+        >
+          刷新数据
+        </button>
+      </DashboardHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Cards */}
@@ -636,6 +705,102 @@ export default function AnalyticsPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Customer Timeline Section */}
+        <div className="bg-white shadow rounded-lg p-6 mt-8">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">客户活动时间线</h3>
+          <div className="mb-4">
+            <label htmlFor="customerSelect" className="block text-sm font-medium text-gray-700 mb-2">
+              选择客户
+            </label>
+            <div className="relative">
+              <select
+                id="customerSelect"
+                className="input w-full max-w-md"
+                value={selectedCustomer}
+                onChange={(e) => setSelectedCustomer(e.target.value)}
+              >
+                <option value="">请选择客户...</option>
+                {customers.map((customer) => (
+                  <option key={customer._id} value={customer._id}>
+                    {customer.firstName} {customer.lastName} ({customer.customerId})
+                  </option>
+                ))}
+              </select>
+              <MagnifyingGlassIcon className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+
+          {selectedCustomer && (
+            <div className="border-t pt-4">
+              {timelineLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              ) : customerTimeline.length > 0 ? (
+                <div className="flow-root">
+                  <ul className="-mb-8">
+                    {customerTimeline.map((event, eventIdx) => (
+                      <li key={`${event.type}-${event._id}`}>
+                        <div className="relative pb-8">
+                          {eventIdx !== customerTimeline.length - 1 ? (
+                            <span
+                              className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
+                              aria-hidden="true"
+                            />
+                          ) : null}
+                          <div className="relative flex space-x-3">
+                            <div>
+                              <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${
+                                event.type === 'purchase' ? 'bg-green-500' :
+                                event.type === 'follow_up' ? 'bg-blue-500' :
+                                'bg-purple-500'
+                              }`}>
+                                {event.type === 'purchase' ? (
+                                  <CurrencyDollarIcon className="h-5 w-5 text-white" />
+                                ) : event.type === 'follow_up' ? (
+                                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-white" />
+                                ) : (
+                                  <HeartIcon className="h-5 w-5 text-white" />
+                                )}
+                              </span>
+                            </div>
+                            <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                                <p className="text-sm text-gray-500">{event.description}</p>
+                                {event.type === 'follow_up' && event.status && (
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${
+                                    event.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    event.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {event.status === 'completed' ? '已完成' :
+                                     event.status === 'in_progress' ? '进行中' :
+                                     event.status === 'scheduled' ? '已安排' : event.status}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                                <time dateTime={event.date}>
+                                  {new Date(event.date).toLocaleDateString('zh-CN')}
+                                </time>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  该客户暂无活动记录
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -11,9 +11,9 @@ import {
   ShoppingBagIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon,
-  HomeIcon
+  EyeIcon
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 
 interface Product {
   _id: string
@@ -170,37 +170,20 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">产品管理</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  管理USANA产品信息、库存和价格
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <HomeIcon className="h-5 w-5 mr-2" />
-                  主控面板
-                </Link>
-                <Link
-                  href="/dashboard/products/new"
-                  className="btn btn-primary flex items-center"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  添加产品
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="产品管理"
+        description="管理USANA产品信息、库存和价格"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <Link
+          href="/dashboard/products/new"
+          className="btn btn-primary flex items-center"
+        >
+          <PlusIcon className="h-5 w-5 mr-2" />
+          添加产品
+        </Link>
+      </DashboardHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}

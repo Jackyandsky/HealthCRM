@@ -7,6 +7,8 @@ import FollowUp from '@/models/FollowUp'
 import HealthPlan from '@/models/HealthPlan'
 import { verifyToken } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const decoded = verifyToken(request)

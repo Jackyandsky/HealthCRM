@@ -19,9 +19,9 @@ import {
   TrashIcon,
   CubeIcon,
   HeartIcon,
-  SparklesIcon,
-  HomeIcon
+  SparklesIcon
 } from '@heroicons/react/24/outline'
+import DashboardHeader from '@/components/ui/DashboardHeader'
 
 interface HealthPlan {
   _id: string
@@ -154,44 +154,27 @@ export default function HealthPlansPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">产品消费计划</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  定制化产品消费指导方案
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <HomeIcon className="h-5 w-5 mr-2" />
-                  主控面板
-                </Link>
-                <Link
-                  href="/dashboard/health-plans/templates"
-                  className="btn btn-secondary flex items-center"
-                >
-                  <CubeIcon className="h-5 w-5 mr-2" />
-                  计划模板
-                </Link>
-                <Link
-                  href="/dashboard/health-plans/new"
-                  className="btn btn-primary flex items-center"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  新建计划
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="产品消费计划"
+        description="定制化产品消费指导方案"
+        backHref="/dashboard"
+        showDashboardLink={false}
+      >
+        <Link
+          href="/dashboard/health-plans/templates"
+          className="btn btn-secondary flex items-center"
+        >
+          <CubeIcon className="h-5 w-5 mr-2" />
+          计划模板
+        </Link>
+        <Link
+          href="/dashboard/health-plans/new"
+          className="btn btn-primary flex items-center"
+        >
+          <PlusIcon className="h-5 w-5 mr-2" />
+          新建计划
+        </Link>
+      </DashboardHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
